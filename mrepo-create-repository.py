@@ -30,6 +30,9 @@ t = timeline.Timeline( *args, max_snapshots=opts.max_snapshots )
 if options['initialize']:
     t.create_snapshot()
     t.create_link( 'upstream', max_offset=1 )
+    for i in (3,7,14,21,30,60,90):
+        if options['max_snapshots'] >= i:
+            t.create_link( 'off{0}days'.format(str(i).zfill(3)), max_offset=i )
 
 t.save()
 
