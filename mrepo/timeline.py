@@ -155,6 +155,12 @@ class Timeline:
         self._max_snapshots = max_snapshots
 
 
+    def get_max_snapshots( self ):
+        """ helper method to return the max snapshots value """
+
+        return self._max_snapshots
+
+
     def freeze( self, user='root' ):
         """ freezes the timeline
 
