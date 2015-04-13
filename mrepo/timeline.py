@@ -23,7 +23,7 @@ class Timeline:
     logger = logging.getLogger('Timeline')
     _datafile_ext = '.timeline'
 
-    def __init__( self, name, source, destination, max_snapshots=30 ):
+    def __init__( self, name, source, destination, max_snapshots=30, excludes='' ):
         """ create a new timeline instance for a given source directory
 
                 ARGUMENTS:
@@ -32,6 +32,7 @@ class Timeline:
                     source:         the timeline source directory (from where snapshots are taken)
                     destination:    the timeline destination directory (where snapshots are written into)
                     max_snapshots:  the max. amount of snapshots
+                    excludes:       colon-separated list of files/directories to exclude when creating snapshots
         """
 
         self.logger.info( 'configuring timeline [{0}] from source [{1}] into destination [{2}]'.format( name, source, destination ))
@@ -49,6 +50,7 @@ class Timeline:
         self._source = os.path.normpath( source )
         self._destination = os.path.normpath( destination )
         self.set_max_snapshots( max_snapshots )
+        self.set_excludes( excludes )
 
         # flag to freeze/unfreeze timeline
         self._frozen = False
@@ -80,7 +82,7 @@ class Timeline:
 
     @classmethod
     def load( cls, path ):
-        """ create a new timeline instance from a given path containing a metadata file """
+        """ create a new timeline instance with parameters read from a metadata file in the given path """
 
         metadata_file = os.path.join( path, Timeline._datafile_ext )
 
@@ -89,7 +91,8 @@ class Timeline:
         pickle_data = pickle.load( fh )
 
         # this calls __init__ with the given arguments loaded from the metadata file
-        return cls( pickle_data['_name'], pickle_data['_source'], pickle_data['_destination'], pickle_data['_max_snapshots'])
+        # the .get() calls are for backwards compatibility, i.e. if the stored object did not contain those values at creation time
+        return cls( pickle_data['_name'], pickle_data['_source'], pickle_data['_destination'], pickle_data.get('_max_snapshots', 30), pickle_data.get('_excludes', '') )
 
 
     def __str__( self ):
@@ -122,7 +125,7 @@ class Timeline:
     def __repr__( self ):
         """ representation of this class """
 
-        return '[name={0}, source={1}, destination={2}, max_snapshots={3}]'.format( self._name, self._source, self._destination, self._max_snapshots )
+        return '[name={0}, source={1}, destination={2}, max_snapshots={3}, excludes={4}]'.format( self._name, self._source, self._destination, self._max_snapshots, self.get_excludes() )
 
 
     def _load_state( self ):
@@ -161,6 +164,36 @@ class Timeline:
         return self._max_snapshots
 
 
+    def set_excludes( self, excludes ):
+        """ helper method to set excludes value """
+
+        excludes_clean = []
+
+        if isinstance( excludes, str ):
+            excludes_clean = [ i.strip() for i in excludes.split(':') if i ]
+        elif isinstance( excludes, list ):
+            excludes_clean = excludes
+        else:
+            raise Exception( 'excludes value must be a colon-separated string or a list' )
+
+        excludes_clean = [ os.path.normpath(i) for i in excludes_clean ]
+
+        for i in excludes_clean:
+            if i[0] == '/' or i[:1] == '..' or i == '.' or i == '*':
+                raise Exception( 'excludes value must only contain relative paths' )
+            exclude_path = os.path.join( self._source, i )
+            if not os.path.exists( exclude_path ):
+                raise Exception( 'invalid exclude path [{0}]'.format( exclude_path ))
+
+        self._excludes = excludes_clean
+
+
+    def get_excludes( self ):
+        """ helper method to return the excludes value """
+
+        return ':'.join( self._excludes )
+
+
     def freeze( self, user='root' ):
         """ freezes the timeline
 
@@ -185,6 +218,35 @@ class Timeline:
         self.logger.info( 'timeline has been unfrozen by user []'.format( user ))
 
         self._frozen = False
+
+
+    def _snapshot_copy_by_hardlink( self, source_path, snapshot_path ):
+        """ helper method which copies (by hard-linking) the given directory """
+
+        #subprocess.check_call(['cp', '-al', source_path, snapshot_path ])
+
+        if not os.path.exists( snapshot_path ):
+            os.makedirs( snapshot_path )
+
+        for i in os.listdir( source_path ):
+            source_obj = os.path.normpath( os.path.join( source_path, i ))
+            for e in self._excludes:
+                exclude_obj = os.path.normpath( os.path.join( source_path, e ))
+                if source_obj == exclude_obj:
+                    self.logger.debug( 'excluding (skipping) object [{0}]'.format( exclude_obj ))
+                    break
+            else:
+                subprocess.check_call(['cp', '-al', source_obj, snapshot_path ])
+
+        # cleanup excludes which are defined as 'subdirectories'
+        for e in self._excludes:
+            if '/' in e:
+                exclude_obj = os.path.normpath( os.path.join( snapshot_path, e ))
+                if os.path.exists( exclude_obj ):
+                    self.logger.debug( 'excluding (deleting) object [{0}]'.format( exclude_obj ))
+                    subprocess.check_call(['rm', '-rf', exclude_obj ])
+                else:
+                    self.logger.warning( 'trying to exclude (delete) unexisting object [{0}]'.format( exclude_obj ))
 
 
     def _snapshot_find_and_copy_dirs( self, source_path, snapshot_path ):
@@ -238,7 +300,7 @@ class Timeline:
         self.save()
 
         # make changes in the file system
-        subprocess.check_call(['cp', '-al', source_path, snapshot_path ])
+        self._snapshot_copy_by_hardlink( source_path, snapshot_path )
         self._snapshot_find_and_copy_dirs( source_path, snapshot_path )
 
         self.logger.debug( 'created new snapshot [{0}]'.format( snapshot ))
@@ -279,7 +341,7 @@ class Timeline:
         self.save()
 
         # make changes in the file system
-        subprocess.check_call(['cp', '-al', self._source, snapshot_path ])
+        self._snapshot_copy_by_hardlink( self._source, snapshot_path )
         self._snapshot_find_and_copy_dirs( self._source, snapshot_path )
 
         # delete old snapshots and handle links...

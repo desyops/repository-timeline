@@ -16,6 +16,7 @@ usage_msg = """
 from optparse import OptionParser
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('--max-snapshots', help='change the max. amount of snapshots', type='int')
+parser.add_option('--excludes', help='change the list of excludes', default=None)
 parser.add_option('--freeze', action='store_true', help='freeze the timeline')
 parser.add_option('--unfreeze', action='store_true', help='unfreeze the timeline')
 parser.add_option('--consistency-check', action='store_true', help='check repository for consistency')
@@ -32,6 +33,10 @@ t = timeline.Timeline.load( args[0] )
 if options['max_snapshots']:
     t.set_max_snapshots( options['max_snapshots'] )
     t.rotate_snapshots()
+
+# we need to use None here since user might want to clean the excludes value by using --excludes=''
+if options['excludes'] is not None:
+    t.set_excludes( options['excludes'] )
 
 if options['freeze']:
     t.freeze()

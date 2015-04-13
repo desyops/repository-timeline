@@ -10,12 +10,14 @@ usage_msg = """
 
         %prog epel /path/to/mirrors/epel /path/to/backups/epel/
         %prog epel /path/to/mirrors/epel /path/to/backups/epel/ --max-snapshots=90
+        %prog epel /path/to/mirrors/epel /path/to/backups/epel/ --excludes='i386:dev:epel3:epel4'
 """
 
 from optparse import OptionParser
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('-m', '--max-snapshots', help='default [%default]', type='int', default=30)
 parser.add_option('-i', '--initialize', action='store_true', help='initialize repository')
+parser.add_option('--excludes', help='colon-separated list of files/directories to be excluded when creating snapshots', default='')
 #parser.add_option('-v', '--verbose', '--debug', action='store_true', dest='verbose', help='run in debug mode')
 
 (opts, args) = parser.parse_args()
@@ -25,7 +27,7 @@ if len(args) < 3:
     parser.error('incorrect number of arguments (-h for help)')
 
 
-t = timeline.Timeline( *args, max_snapshots=opts.max_snapshots )
+t = timeline.Timeline( *args, max_snapshots=opts.max_snapshots, excludes=opts.excludes )
 
 if options['initialize']:
     t.create_snapshot()
