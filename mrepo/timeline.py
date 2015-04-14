@@ -482,8 +482,18 @@ class Timeline:
 
         snapshot_index = self._lsnapshots.index( snapshot )
 
-        neighbour_snapshot_index = min( len(self._lsnapshots), (snapshot_index + 1) )
-    
+        # if we only have a single snapshot left we return it as it's neighbour...
+        if len(self._lsnapshots) == 1:
+            neighbour_snapshot_index = snapshot_index
+
+        # the neighbour of the latest snapshot must be an older snapshot...
+        elif snapshot_index == (len(self._lsnapshots) - 1):
+            neighbour_snapshot_index = snapshot_index - 1
+
+        # in any other case we find the nearest more recent snapshot
+        else:
+            neighbour_snapshot_index = snapshot_index + 1
+
         return self._lsnapshots[ neighbour_snapshot_index ]
 
 
