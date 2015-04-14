@@ -249,29 +249,58 @@ class Timeline:
                     self.logger.warning( 'trying to exclude (delete) unexisting object [{0}]'.format( exclude_obj ))
 
 
-    def _snapshot_find_and_copy_dirs( self, source_path, snapshot_path ):
-        """ helper method which copies (instead of only hard-linking) a list of directories """
+    def _snapshot_find_and_copy_objects( self, source_path, snapshot_path ):
+        """ helper method which first removes and afterwards copies
+            (instead of just hard-linking) a list of files/directories
+        """
 
-        # list of directories which should be _copied_ instead of hard-linked
-        # FIXME put this into a separate method...
-        #copy_dirs = ['repodata', 'repoview']
-        copy_dirs = ['repodata']
-        # TODO debian/ubuntu...
+        # poor man's code to figure out which type of repository...
+        distro = 'redhat'
+        if os.path.exists( os.path.join( source_path, 'dists' )):
+            distro = 'debian'
+            if os.path.exists( os.path.join( source_path, 'ubuntu' )):
+                distro = 'ubuntu'
+
+        copy_dirs = []
+        copy_files = []
+
+        if distro == 'redhat':
+            # list of directories which will be copied instead of hard-linked
+            #copy_dirs = ['repodata', 'repoview']
+            copy_dirs = ['repodata']
+        else:
+            copy_dirs = ['binary-*']
+            copy_files = ['Release', 'Release.gpg', 'Contents-*.gz']
 
         if copy_dirs:
             # generate a find cmd with list of dirs to be copied
             # e.g. find /tmp/foo -type d -name repodata -o -name repoview -o -name bar
             find_cmd = ['find', snapshot_path, '-type', 'd', '-name', copy_dirs[0]]
-            for d in copy_dirs[1:]:
-                find_cmd.extend( ['-o', '-name', d] )
+            for i in copy_dirs[1:]:
+                find_cmd.extend( ['-o', '-name', i] )
 
             #subprocess.check_output( find_cmd )
             cdirs = subprocess.Popen( find_cmd, stdout=subprocess.PIPE).communicate()[0].split()
             for cdir in cdirs:
                 subprocess.check_call(['rm', '-rf', cdir ])
                 rel_path = os.path.relpath( cdir, snapshot_path)
-                self.logger.debug( 'copying metadata [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cdir ))
+                self.logger.debug( 'copying directory [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cdir ))
                 subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cdir ])
+
+        if copy_files:
+            # generate a find cmd with list of files to be copied
+            # e.g. find /tmp/foo -type f -name Release -o -name Release.gpg ...
+            find_cmd = ['find', snapshot_path, '-type', 'f', '-name', copy_files[0]]
+            for i in copy_files[1:]:
+                find_cmd.extend( ['-o', '-name', i] )
+
+            #subprocess.check_output( find_cmd )
+            cfiles = subprocess.Popen( find_cmd, stdout=subprocess.PIPE).communicate()[0].split()
+            for cfile in cfiles:
+                subprocess.check_call(['rm', '-f', cfile ])
+                rel_path = os.path.relpath( cfile, snapshot_path)
+                self.logger.debug( 'copying file [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cfile ))
+                subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cfile ])
 
 
     def create_named_snapshot( self, snapshot, source_snapshot=None ):
@@ -301,7 +330,7 @@ class Timeline:
 
         # make changes in the file system
         self._snapshot_copy_by_hardlink( source_path, snapshot_path )
-        self._snapshot_find_and_copy_dirs( source_path, snapshot_path )
+        self._snapshot_find_and_copy_objects( source_path, snapshot_path )
 
         self.logger.debug( 'created new snapshot [{0}]'.format( snapshot ))
 
@@ -342,7 +371,7 @@ class Timeline:
 
         # make changes in the file system
         self._snapshot_copy_by_hardlink( self._source, snapshot_path )
-        self._snapshot_find_and_copy_dirs( self._source, snapshot_path )
+        self._snapshot_find_and_copy_objects( self._source, snapshot_path )
 
         # delete old snapshots and handle links...
         self.rotate_snapshots()
