@@ -242,7 +242,7 @@ class Timeline:
         for e in self._excludes:
             if '/' in e:
                 exclude_obj = os.path.normpath( os.path.join( snapshot_path, e ))
-                if os.path.exists( exclude_obj ):
+                if os.path.exists( exclude_obj ) or os.path.islink( exclude_obj ):
                     self.logger.debug( 'excluding (deleting) object [{0}]'.format( exclude_obj ))
                     subprocess.check_call(['rm', '-rf', exclude_obj ])
                 else:
