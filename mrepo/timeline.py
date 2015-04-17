@@ -3,12 +3,11 @@
 # Author: Jan Engels, DESY - IT
 
 import os, sys, time, random, logging, logging.config, subprocess, pickle, pprint
+import ConfigParser
+from datetime import datetime
 
 cwd=os.path.dirname(sys.argv[0])
 logging.config.fileConfig( os.path.join( cwd, 'mrepo-logging.cfg' ))
-
-from datetime import datetime
-
 
 def isalnum( string, allowed_extra_chars='' ):
     """ check if the given string only contains alpha-numeric characters + optionally allowed extra chars """
@@ -22,8 +21,9 @@ class Timeline:
 
     logger = logging.getLogger('Timeline')
     _datafile_ext = '.timeline'
+    _cfgfile_ext = 'timeline.cfg'
 
-    def __init__( self, name, source, destination, max_snapshots=30, excludes='' ):
+    def __init__( self, name, source, destination ):
         """ create a new timeline instance for a given source directory
 
                 ARGUMENTS:
@@ -31,8 +31,6 @@ class Timeline:
                     name:           the name of the timeline instance
                     source:         the timeline source directory (from where snapshots are taken)
                     destination:    the timeline destination directory (where snapshots are written into)
-                    max_snapshots:  the max. amount of snapshots
-                    excludes:       colon-separated list of files/directories to exclude when creating snapshots
         """
 
         self.logger.info( 'configuring timeline [{0}] from source [{1}] into destination [{2}]'.format( name, source, destination ))
@@ -46,11 +44,19 @@ class Timeline:
         if not os.path.exists( destination ):
             os.makedirs( destination )
 
+        # create a logger for the current instance
+        self.logger = logging.getLogger('Timeline.{0}'.format( name ))
+
+        # define "private" variables
         self._name = name
         self._source = os.path.normpath( source )
         self._destination = os.path.normpath( destination )
-        self.set_max_snapshots( max_snapshots )
-        self.set_excludes( excludes )
+
+        # the maximum amount of snapshots that can be made from the source directory
+        self._max_snapshots = 90
+
+        # list of files/directories to exclude when creating snapshots
+        self._excludes = []
 
         # flag to freeze/unfreeze timeline
         self._frozen = False
@@ -68,8 +74,8 @@ class Timeline:
         # percistency file for storing the class state
         self._datafile = os.path.join( self._destination, self._datafile_ext )
 
-        # create a logger for the current instance
-        self.logger = logging.getLogger('Timeline.{0}'.format( name ))
+        # configuration file
+        self._cfgfile = os.path.join( self._destination, self._cfgfile_ext )
 
         # load class state from metadata file in case one exists
         if os.path.exists( self._datafile ):
@@ -78,6 +84,15 @@ class Timeline:
                 or os.path.normpath( source) != self._source
                 or os.path.normpath( destination ) != self._destination ):
                 raise Exception( 'inconsistencies found loading class state from metadata file' )
+
+        # initialize options required for repositories
+        self._initialize_repository_options()
+
+        # generate default config file in case none exists, otherwise load settings from config file
+        if not os.path.exists( self._cfgfile ):
+            self._save_cfgfile()
+        else:
+            self._load_cfgfile()
 
 
     @classmethod
@@ -91,8 +106,7 @@ class Timeline:
         pickle_data = pickle.load( fh )
 
         # this calls __init__ with the given arguments loaded from the metadata file
-        # the .get() calls are for backwards compatibility, i.e. if the stored object did not contain those values at creation time
-        return cls( pickle_data['_name'], pickle_data['_source'], pickle_data['_destination'], pickle_data.get('_max_snapshots', 30), pickle_data.get('_excludes', '') )
+        return cls( pickle_data['_name'], pickle_data['_source'], pickle_data['_destination'] )
 
 
     def __str__( self ):
@@ -125,28 +139,7 @@ class Timeline:
     def __repr__( self ):
         """ representation of this class """
 
-        return '[name={0}, source={1}, destination={2}, max_snapshots={3}, excludes={4}]'.format( self._name, self._source, self._destination, self._max_snapshots, self.get_excludes() )
-
-
-    def _load_state( self ):
-        """ loads timeline state from file """
-
-        self.logger.info( 'loading timeline state...')
-        fh = open( self._datafile, 'r' )
-        self.__dict__.update(pickle.load( fh ))
-        self.logger.info( 'timeline state loaded from [{0}]'.format( self._datafile ))
-
-
-    def save( self ):
-        """ saves current timeline state into file """
-
-        self.logger.info( 'saving current timeline state...')
-        fh = open( self._datafile, 'w' )
-        #pickle.dump( self, fh )
-        d = self.__dict__.copy() # copy the dict since we will change it
-        del d['logger'] # need to delete self.logger due to file object
-        pickle.dump( d, fh )
-        self.logger.debug( 'current state saved into [{0}]'.format( self._datafile ))
+        return '[name={0}, source={1}, destination={2}, max_snapshots={3}, excludes={4}]'.format( self._name, self._source, self._destination, self.get_max_snapshots(), self.get_excludes() )
 
 
     def set_max_snapshots( self, max_snapshots ):
@@ -220,6 +213,104 @@ class Timeline:
         self._frozen = False
 
 
+    def save( self ):
+        """ saves the current timeline state """
+
+        self._save_state()
+        self._save_cfgfile()
+
+
+    def _save_state( self ):
+        """ saves current timeline state into file """
+
+        self.logger.info( 'saving current timeline state...')
+        fh = open( self._datafile, 'w' )
+        #pickle.dump( self, fh )
+        d = self.__dict__.copy() # copy the dict since we will change it
+        del d['logger'] # need to delete self.logger due to file object
+        pickle.dump( d, fh )
+        self.logger.debug( 'current state saved into [{0}]'.format( self._datafile ))
+
+
+    def _load_state( self ):
+        """ loads timeline state from file """
+
+        self.logger.info( 'loading timeline state...')
+        fh = open( self._datafile, 'r' )
+        self.__dict__.update(pickle.load( fh ))
+        self.logger.info( 'timeline state loaded from [{0}]'.format( self._datafile ))
+
+
+    def _save_cfgfile( self ):
+        """ saves current settings into configuration file """
+
+        # FIXME cannot use this because python version is too old...
+        #cfg = ConfigParser.RawConfigParser( allow_no_value = True )
+
+        cfg = ConfigParser.RawConfigParser()
+        cfg.add_section('MAIN')
+        cfg.add_section('ADVANCED')
+        cfg.set( 'MAIN', """\
+# ============================================================================================================================= =
+# warning: this file is constantly auto-generated! do not be surprised if any comments get lost
+# =============================================================================================================================""", '' )
+        cfg.set( 'ADVANCED', """\
+# ============================================================================================================================= =
+# advanced options. do not touch this section unless you know what you are doing!
+# options description:
+#    excludes: colon-separated list of files/directories to be excluded when creating snapshots
+#       no absolute paths allowed. only top-level paths or relative paths, e.g.
+#       excludes = testing:dev:tmp:i386/builds
+#       in this example the path i386/builds contains a subfolder. due to technical details these "relative paths" are not
+#       skipped during the copy process. instead, they get deleted _after_ the copy process has taken place. 
+#    copy_files_recursive: colon-separated list of file names to be copied (i.e. not hard-linked) when creating snapshots
+#    copy_dirs_recursive:  colon-separated list of directory names to be copied (i.e. not hard-linked) when creating snapshots
+#       warning: the previous copy options perform a _recursive_ find in the source directory and _copy_ any found objects!
+# =============================================================================================================================""", '' )
+        cfg.set( 'MAIN', 'max_snapshots', self.get_max_snapshots() )
+        cfg.set( 'ADVANCED', 'excludes', self.get_excludes() )
+        cfg.set( 'ADVANCED', 'copy_files_recursive', ':'.join(self._copy_files_recursive) )
+        cfg.set( 'ADVANCED', 'copy_dirs_recursive', ':'.join(self._copy_dirs_recursive) )
+
+        # write configuration file
+        with open( self._cfgfile, 'wb' ) as cfgfile:
+            cfg.write( cfgfile )
+
+
+    def _load_cfgfile( self ):
+        """ load settings from cofiguration file """
+
+        cfg = ConfigParser.SafeConfigParser()
+        cfg.read( self._cfgfile )
+
+        # read and set settings defined in the configuration file
+        self.set_max_snapshots( cfg.getint( 'MAIN', 'max_snapshots' ))
+        self.set_excludes( cfg.get( 'ADVANCED', 'excludes' ))
+        # FIXME ugly hack...
+        self._copy_files_recursive = [ i.strip() for i in cfg.get( 'ADVANCED', 'copy_files_recursive', '' ).split(':') if i ]
+        self._copy_dirs_recursive = [ i.strip() for i in cfg.get( 'ADVANCED', 'copy_dirs_recursive', '' ).split(':') if i ]
+
+
+    def _initialize_repository_options( self ):
+        """ this options are specific to repositories only """
+
+        # FIXME poor man's code to figure out which type of repository...
+        distro = 'redhat'
+        if os.path.exists( os.path.join( self._source, 'dists' )):
+            distro = 'debian'
+            if os.path.exists( os.path.join( self._source, 'ubuntu' )):
+                distro = 'ubuntu'
+
+        if distro == 'redhat':
+            # list of directories which will be copied instead of hard-linked
+            #self._copy_dirs_recursive = ['repodata', 'repoview']
+            self._copy_dirs_recursive = ['repodata']
+            self._copy_files_recursive = []
+        else:
+            self._copy_dirs_recursive = ['binary-*']
+            self._copy_files_recursive = ['Release', 'Release.gpg', 'Contents-*.gz']
+
+
     def _snapshot_copy_by_hardlink( self, source_path, snapshot_path ):
         """ helper method which copies (by hard-linking) the given directory """
 
@@ -254,32 +345,15 @@ class Timeline:
             (instead of just hard-linking) a list of files/directories
         """
 
-        # poor man's code to figure out which type of repository...
-        distro = 'redhat'
-        if os.path.exists( os.path.join( source_path, 'dists' )):
-            distro = 'debian'
-            if os.path.exists( os.path.join( source_path, 'ubuntu' )):
-                distro = 'ubuntu'
-
-        copy_dirs = []
-        copy_files = []
-
-        if distro == 'redhat':
-            # list of directories which will be copied instead of hard-linked
-            #copy_dirs = ['repodata', 'repoview']
-            copy_dirs = ['repodata']
-        else:
-            copy_dirs = ['binary-*']
-            copy_files = ['Release', 'Release.gpg', 'Contents-*.gz']
-
-        if copy_dirs:
+        if self._copy_dirs_recursive:
             # generate a find cmd with list of dirs to be copied
             # e.g. find /tmp/foo -type d -name repodata -o -name repoview -o -name bar
-            find_cmd = ['find', snapshot_path, '-type', 'd', '-name', copy_dirs[0]]
-            for i in copy_dirs[1:]:
+            find_cmd = ['find', snapshot_path, '-type', 'd', '-name', self._copy_dirs_recursive[0]]
+            for i in self._copy_dirs_recursive[1:]:
                 find_cmd.extend( ['-o', '-name', i] )
 
-            #subprocess.check_output( find_cmd )
+            # FIXME cannot use this because python version is too old...
+            #cdirs = subprocess.check_output( find_cmd ).split()
             cdirs = subprocess.Popen( find_cmd, stdout=subprocess.PIPE).communicate()[0].split()
             for cdir in cdirs:
                 subprocess.check_call(['rm', '-rf', cdir ])
@@ -287,14 +361,15 @@ class Timeline:
                 self.logger.debug( 'copying directory [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cdir ))
                 subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cdir ])
 
-        if copy_files:
+        if self._copy_files_recursive:
             # generate a find cmd with list of files to be copied
             # e.g. find /tmp/foo -type f -name Release -o -name Release.gpg ...
-            find_cmd = ['find', snapshot_path, '-type', 'f', '-name', copy_files[0]]
-            for i in copy_files[1:]:
+            find_cmd = ['find', snapshot_path, '-type', 'f', '-name', self._copy_files_recursive[0]]
+            for i in self._copy_files_recursive[1:]:
                 find_cmd.extend( ['-o', '-name', i] )
 
-            #subprocess.check_output( find_cmd )
+            # FIXME cannot use this because python version is too old...
+            #cfiles = subprocess.check_output( find_cmd ).split()
             cfiles = subprocess.Popen( find_cmd, stdout=subprocess.PIPE).communicate()[0].split()
             for cfile in cfiles:
                 subprocess.check_call(['rm', '-f', cfile ])
