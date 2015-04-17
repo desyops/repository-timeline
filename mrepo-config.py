@@ -10,7 +10,7 @@ usage_msg = """
 
         %prog /path/to/backups/epel/ --freeze
         %prog /path/to/backups/epel/ --consistency-check
-        %prog /path/to/backups/epel/ --max-snapshots=90
+        %prog /path/to/backups/epel/ --max-snapshots=42
 """
 
 from optparse import OptionParser

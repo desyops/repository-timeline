@@ -10,9 +10,9 @@ usage_msg = """
 
     examples:
 
-        %prog /path/to/backups/epel epel.frozen
-        %prog /path/to/backups/epel epel.offset7 --max-offset=7
-        %prog /path/to/backups/epel epel.offset7 --snapshot=2015.02.12-141326 --max-offset=7
+        %prog /path/to/backups/epel myepel.link
+        %prog /path/to/backups/epel myepel.offset7 --max-offset=7
+        %prog /path/to/backups/epel myepel.offset7 --snapshot=2015.02.12-141326 --max-offset=7
 """
 
 from optparse import OptionParser
