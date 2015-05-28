@@ -26,7 +26,7 @@ if options['initialize']:
     t.create_snapshot()
     t.create_link( 'upstream', max_offset=1 )
     for i in (3,7,14,21,30,60,90):
-        t.create_link( 'off{0}days'.format(str(i).zfill(3)), max_offset=i )
+        t.create_link( 'offset{0}'.format(str(i).zfill(3)), max_offset=i )
 
 t.save()
 
