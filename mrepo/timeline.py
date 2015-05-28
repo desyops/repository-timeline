@@ -487,6 +487,8 @@ class Timeline:
 
         self.logger.debug( 'deleted snapshot [{0}] [{1}]'.format( snapshot, deleted_snapshot ))
 
+        return deleted_snapshot
+
 
     def create_link( self, link, snapshot=None, max_offset=0, warn_before_max_offset=0 ):
         """ creates a new symbolic link to the given snapshot into the destination directory
@@ -551,6 +553,8 @@ class Timeline:
         subprocess.check_call(['rm', '-f', deleted_link['path'] ])
 
         self.logger.debug( 'deleted link [{0}] [{1}]'.format( link, deleted_link ))
+
+        return deleted_link
 
 
     def update_link( self, link, snapshot=None ):
