@@ -6,9 +6,11 @@ import os
 
 usage_msg = """
 
-%prog [options] REPOSITORY_LOCATION/LINK
+%prog [options] REPOSITORY_LOCATION/LINK NEW_LINKNAME`
 
-    ex: %prog /path/to/backups/epel/myepel.link
+    examples:
+
+        %prog /path/to/backups/epel/myepel.link new_epel.link
 """
 
 from optparse import OptionParser
@@ -18,11 +20,12 @@ parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 (opts, args) = parser.parse_args()
 options = vars(opts)
 
-if len(args) != 1:
+if len(args) != 2:
     parser.error('incorrect number of arguments (-h for help)')
 
 split_path = os.path.split( os.path.normpath( args[0] ))
 
 t = timeline.Timeline.load( split_path[0] )
-t.delete_link( link=split_path[1] )
+l = t.delete_link( link=split_path[1] )
+t.create_link( link=args[1], snapshot=l['snapshot'], max_offset=l['max_offset'], warn_before_max_offset=l['warn_before_max_offset'] )
 
