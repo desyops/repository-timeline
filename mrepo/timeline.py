@@ -381,12 +381,15 @@ class Timeline:
     def create_named_snapshot( self, snapshot, source_snapshot=None ):
         """ creates a named snapshot from the source directory
 
-                no action is taken if the timeline has been frozen!
+            named snapshots are created but not managed by the timeline class
+
+            since these snapshots are not stored in the metadata, they cannot be referenced or managed
+            by the timeline methods
+
+            these snapshots can be created even if the timeline has been frozen.
         """
 
         self.logger.info( 'creating new snapshot [{0}]'.format( snapshot ))
-
-        self._check_frozen()
 
         if source_snapshot:
             self.logger.info( 'using source snapshot [{0}]'.format( source_snapshot ))
@@ -400,8 +403,8 @@ class Timeline:
 
         # create new snapshot
         snapshot_path = os.path.join( self._destination, snapshot )
-        self._snapshots[snapshot] = { 'created' : datetime.now(), 'path': snapshot_path, 'links' : [] }
-        self.save()
+        #self._snapshots[snapshot] = { 'created' : datetime.now(), 'path': snapshot_path, 'links' : [] }
+        #self.save()
 
         # make changes in the file system
         self._snapshot_copy_by_hardlink( source_path, snapshot_path )
