@@ -25,7 +25,11 @@ if len(args) != 2:
 
 split_path = os.path.split( os.path.normpath( args[0] ))
 
+link_name = args[1]
+if '/' in args[1]:
+    link_name = os.path.split( os.path.normpath( args[1] ))[1]
+
 t = timeline.Timeline.load( split_path[0] )
 l = t.delete_link( link=split_path[1] )
-t.create_link( link=args[1], snapshot=l['snapshot'], max_offset=l['max_offset'], warn_before_max_offset=l['warn_before_max_offset'] )
+t.create_link( link=link_name, snapshot=l['snapshot'], max_offset=l['max_offset'], warn_before_max_offset=l['warn_before_max_offset'] )
 

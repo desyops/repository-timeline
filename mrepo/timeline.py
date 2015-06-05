@@ -520,6 +520,9 @@ class Timeline:
             raise Exception( 'link [{0}] already exists!'.format( link ))
 
         if max_offset:
+            if max_offset < 0:
+                raise Exception( 'max_offset must be > 0' )
+
             if self._get_snapshot_offset( snapshot ) > max_offset:
                 self.logger.warning( 'creating link to snapshot with offset [{0}] which already lies beyond max_offset [{1}]!'.format( self._get_snapshot_offset( snapshot ), max_offset ))
 
