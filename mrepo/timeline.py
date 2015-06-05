@@ -316,8 +316,7 @@ class Timeline:
 
         #subprocess.check_call(['cp', '-al', source_path, snapshot_path ])
 
-        if not os.path.exists( snapshot_path ):
-            os.makedirs( snapshot_path )
+        os.makedirs( snapshot_path )
 
         for i in os.listdir( source_path ):
             source_obj = os.path.normpath( os.path.join( source_path, i ))
