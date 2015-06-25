@@ -25,6 +25,7 @@ t = timeline.Timeline( *args )
 if options['initialize']:
     t.create_snapshot()
     t.create_link( 'upstream', max_offset=1 )
+    t.create_link( 'downstream' )
     for i in (3,7,14,21,30,60,90):
         t.create_link( 'offset{0}'.format(str(i).zfill(3)), max_offset=i )
 
