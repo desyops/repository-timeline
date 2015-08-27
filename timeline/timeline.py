@@ -7,7 +7,7 @@ import ConfigParser
 from datetime import datetime
 
 cwd=os.path.dirname(sys.argv[0])
-logging.config.fileConfig( os.path.join( cwd, 'mrepo-logging.cfg' ))
+logging.config.fileConfig( os.path.join( cwd, 'timeline-logging.cfg' ))
 
 def isalnum( string, allowed_extra_chars='' ):
     """ check if the given string only contains alpha-numeric characters + optionally allowed extra chars """
@@ -747,7 +747,7 @@ if __name__ == '__main__':
     # bind the console handler to the logger
     logger.addHandler(ch)
 
-    # write debug messages to /tmp/mrepo.log
+    # write debug messages to /tmp
     logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-13s: %(levelname)-8s %(message)s',
                     #datefmt='%y-%m-%d %H:%M',

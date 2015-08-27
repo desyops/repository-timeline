@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from mrepo import timeline
+from timeline import timeline
 import os, sys
 
 usage_msg = """
@@ -27,7 +27,7 @@ if options['lock']:
     try:
         import lockfile
     except ImportError:
-        from mrepo import lockfile
+        from timeline import lockfile
 
     lock_file = os.path.join( args[0], '.lock' )
     lock = lockfile.FileLock( lock_file )

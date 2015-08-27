@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from mrepo import timeline
+from timeline import timeline
 
 usage_msg = """
 
