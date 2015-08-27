@@ -6,8 +6,9 @@ import os, sys, time, random, logging, logging.config, subprocess, pickle, pprin
 import ConfigParser
 from datetime import datetime
 
-cwd=os.path.dirname(sys.argv[0])
-logging.config.fileConfig( os.path.join( cwd, 'timeline-logging.cfg' ))
+if __name__ != '__main__':
+    cwd=os.path.dirname(sys.argv[0])
+    logging.config.fileConfig( os.path.join( cwd, 'timeline-logging.cfg' ))
 
 def isalnum( string, allowed_extra_chars='' ):
     """ check if the given string only contains alpha-numeric characters + optionally allowed extra chars """
@@ -757,22 +758,20 @@ if __name__ == '__main__':
                     filename='/tmp/timeline.log',
                     filemode='w')
 
-    epel = Timeline( 'epel', '/tmp/epel.tst', '/tmp/epel.dst', max_snapshots=15 )
-    epel.save()
-    epel = Timeline.load( '/tmp/epel.dst' )
-    epel._debug = True
-    epel.create_snapshot()
-    epel.create_link( 'epel.grid', max_offset=1 )
-    ##epel.create_link( 'epel.desktops', epel._lsnapshots[-1], max_offset=7 )
-    ##epel.create_link( 'epel.dcache', epel._lsnapshots[-1] )
-    epel.create_snapshot()
-    epel.create_snapshot()
-    for i in range(epel._max_snapshots):
-        epel.create_snapshot()
+    subprocess.check_call(['rm', '-rf', '/tmp/timeline.src', '/tmp/timeline.dst' ])
+    subprocess.check_call(['cp', '-a', '/etc/skel', '/tmp/timeline.src' ])
 
-    #epel.set_max_snapshots( 10 )
-
-    #l = epel._lsnapshots[:]
-    #for i in l:
-    #    epel.delete_snapshot(i)
+    t = Timeline( 'ttt', '/tmp/timeline.src', '/tmp/timeline.dst' )
+    t.set_max_snapshots( 10 )
+    t.save()
+    t = Timeline.load( '/tmp/timeline.dst' )
+    t._debug = True
+    t.create_snapshot()
+    t.create_link( 'mylink_offset1', max_offset=1 )
+    ##t.create_link( 'mylink_offset7', t._lsnapshots[-1], max_offset=7 )
+    ##t.create_link( 'mylink_nooffset', t._lsnapshots[-1] )
+    t.create_snapshot()
+    t.create_snapshot()
+    for i in range(t._max_snapshots):
+        t.create_snapshot()
 
