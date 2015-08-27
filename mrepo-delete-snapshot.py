@@ -8,7 +8,7 @@ usage_msg = """
 
 %prog [options] REPOSITORY_LOCATION/SNAPSHOT
 
-    ex: %prog /path/to/backups/epel/2015.02.12-141326
+    example: %prog /srv/repo/linux/ubuntu.timeline/2015.02.12-141326
 """
 
 from optparse import OptionParser

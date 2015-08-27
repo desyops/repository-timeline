@@ -10,7 +10,7 @@ usage_msg = """
 
     examples:
 
-        %prog /path/to/backups/epel
+        %prog /srv/repo/linux/ubuntu.timeline
 """
 
 from optparse import OptionParser

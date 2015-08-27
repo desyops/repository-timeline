@@ -10,8 +10,8 @@ usage_msg = """
 
     examples:
 
-        %prog /path/to/backups/epel/myepel.link
-        %prog /path/to/backups/epel/myepel.link --snapshot=2015.02.12-141326
+        %prog /srv/repo/linux/ubuntu.timeline/myrepo.link
+        %prog /srv/repo/linux/ubuntu.timeline/myrepo.link --snapshot=2015.02.12-141326
 """
 
 from optparse import OptionParser

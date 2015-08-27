@@ -8,9 +8,10 @@ usage_msg = """
 
     examples:
 
-        %prog /path/to/backups/epel/ --freeze
-        %prog /path/to/backups/epel/ --consistency-check
-        %prog /path/to/backups/epel/ --max-snapshots=42
+        %prog /srv/repo/linux/ubuntu.timeline --freeze
+        %prog /srv/repo/linux/ubuntu.timeline --unfreeze
+        %prog /srv/repo/linux/ubuntu.timeline --consistency-check
+        %prog /srv/repo/linux/ubuntu.timeline --max-snapshots=42
 """
 
 from optparse import OptionParser

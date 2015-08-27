@@ -8,9 +8,7 @@ usage_msg = """
 
 %prog [options] REPOSITORY_LOCATION/LINK NEW_LINKNAME`
 
-    examples:
-
-        %prog /path/to/backups/epel/myepel.link new_epel.link
+    example: %prog /srv/repo/linux/ubuntu.timeline/myrepo.link mynewrepo.link
 """
 
 from optparse import OptionParser

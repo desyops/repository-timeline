@@ -7,6 +7,7 @@ usage_msg = """
 
 %prog [options] REPOSITORY_LOCATION
 
+    example: %prog /srv/repo/linux/ubuntu.timeline
 """
 
 from optparse import OptionParser

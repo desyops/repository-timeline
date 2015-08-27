@@ -6,7 +6,7 @@ usage_msg = """
 
 %prog [options] NAME SOURCE DESTINATION
 
-    example: %prog epel /path/to/mirrors/epel /path/to/backups/epel/
+    example: %prog -i ubuntu /srv/repo/linux/ubuntu /srv/repo/linux/ubuntu.timeline
 """
 
 from optparse import OptionParser
