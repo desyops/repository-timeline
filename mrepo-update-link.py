@@ -27,7 +27,7 @@ if len(args) != 1:
 
 split_path = os.path.split( os.path.normpath( args[0] ))
 
-if '/' in options['snapshot']:
+if options['snapshot'] and '/' in options['snapshot']:
     options['snapshot'] = os.path.split( os.path.normpath( options['snapshot'] ))[1]
 
 t = timeline.Timeline.load( split_path[0] )

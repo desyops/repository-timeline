@@ -33,7 +33,7 @@ if len(args) != 1:
 
 split_path = os.path.split( os.path.normpath( args[0] ))
 
-if '/' in options['source_snapshot']:
+if options['source_snapshot'] and '/' in options['source_snapshot']:
     options['source_snapshot'] = os.path.split( os.path.normpath( options['source_snapshot'] ))[1]
 
 if options['lock']:
