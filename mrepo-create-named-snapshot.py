@@ -16,7 +16,7 @@ usage_msg = """
     examples:
 
         %prog /srv/repo/linux/ubuntu.timeline/myrepo
-        %prog /srv/repo/linux/ubuntu.timeline/myrepo --lock --snapshot=2015.02.12-141326
+        %prog /srv/repo/linux/ubuntu.timeline/myrepo --source-snapshot=2015.02.12-141326
 """
 
 from optparse import OptionParser
