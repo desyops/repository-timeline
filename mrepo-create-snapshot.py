@@ -25,10 +25,7 @@ if len(args) != 1:
 
 if options['lock']:
 
-    try:
-        import lockfile
-    except ImportError:
-        from timeline import lockfile
+    import lockfile
 
     lock_file = os.path.join( args[0], '.lock' )
     lock = lockfile.FileLock( lock_file )

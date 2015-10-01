@@ -38,10 +38,7 @@ if options['source_snapshot'] and '/' in options['source_snapshot']:
 
 if options['lock']:
 
-    try:
-        import lockfile
-    except ImportError:
-        from timeline import lockfile
+    import lockfile
 
     lock_file = os.path.join( split_path[0], '.lock' )
     lock = lockfile.FileLock( lock_file )
