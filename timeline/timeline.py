@@ -23,6 +23,7 @@ class Timeline:
     logger = logging.getLogger('Timeline')
     _datafile_ext = '.timeline'
     _cfgfile_ext = 'timeline.cfg'
+    _cfgfile_diff_ext = '.timeline.diff.exclude'
 
     def __init__( self, name, source, destination ):
         """ create a new timeline instance for a given source directory
@@ -77,6 +78,9 @@ class Timeline:
 
         # configuration file
         self._cfgfile = os.path.join( self._destination, self._cfgfile_ext )
+
+        # diff configuration file
+        self._cfgfile_diff = os.path.join( self._destination, self._cfgfile_diff_ext )
 
         # load class state from metadata file in case one exists
         if os.path.exists( self._datafile ):
@@ -281,6 +285,18 @@ class Timeline:
         # write configuration file
         with open( self._cfgfile, 'wb' ) as cfgfile:
             cfg.write( cfgfile )
+
+        # write excludes file for diff cmd
+        diffcfgfile = """# the contents in this file were generated from the settings:\n# copy_files_recursive and copy_dirs_recursive\n\n"""
+        if not os.path.exists( self._cfgfile_diff ):
+            with open( self._cfgfile_diff, 'wb' ) as cfgfile:
+                cfgfile.write( diffcfgfile )
+                if self._copy_dirs_recursive:
+                    cfgfile.write( '\n'.join(self._copy_dirs_recursive) )
+                    cfgfile.write( '\n' )
+                if self._copy_files_recursive:
+                    cfgfile.write( '\n'.join(self._copy_files_recursive) )
+                    cfgfile.write( '\n' )
 
 
     def _load_cfgfile( self ):
