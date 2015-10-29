@@ -24,6 +24,7 @@ class Timeline:
     _datafile_ext = '.timeline'
     _cfgfile_ext = 'timeline.cfg'
     _cfgfile_diff_ext = '.timeline.diff.exclude'
+    _difflog_ext = '.diff.log'
 
     def __init__( self, name, source, destination ):
         """ create a new timeline instance for a given source directory
@@ -81,6 +82,9 @@ class Timeline:
 
         # diff configuration file
         self._cfgfile_diff = os.path.join( self._destination, self._cfgfile_diff_ext )
+
+        # path for storing diff log files (disabled by default)
+        self._diff_log_path = ''
 
         # load class state from metadata file in case one exists
         if os.path.exists( self._datafile ):
@@ -278,6 +282,7 @@ class Timeline:
 #       warning: the previous copy options perform a _recursive_ find in the source directory and _copy_ any found objects!
 # =============================================================================================================================""", '' )
         cfg.set( 'MAIN', 'max_snapshots', self.get_max_snapshots() )
+        cfg.set( 'MAIN', 'diff_log_path', self._diff_log_path  )
         cfg.set( 'ADVANCED', 'excludes', self.get_excludes() )
         cfg.set( 'ADVANCED', 'copy_files_recursive', ':'.join(self._copy_files_recursive) )
         cfg.set( 'ADVANCED', 'copy_dirs_recursive', ':'.join(self._copy_dirs_recursive) )
@@ -308,6 +313,8 @@ class Timeline:
         # read and set settings defined in the configuration file
         self.set_max_snapshots( cfg.getint( 'MAIN', 'max_snapshots' ))
         self.set_excludes( cfg.get( 'ADVANCED', 'excludes' ))
+        if cfg.has_option( 'MAIN', 'diff_log_path' ):
+            self._diff_log_path = cfg.get( 'MAIN', 'diff_log_path' )
         # FIXME ugly hack...
         self._copy_files_recursive = [ i.strip() for i in cfg.get( 'ADVANCED', 'copy_files_recursive', '' ).split(':') if i ]
         self._copy_dirs_recursive = [ i.strip() for i in cfg.get( 'ADVANCED', 'copy_dirs_recursive', '' ).split(':') if i ]
@@ -398,6 +405,32 @@ class Timeline:
                 subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cfile ])
 
 
+    def _snapshot_generate_diff_report( self ):
+        """ helper method for generating a diff report from the current snapshot
+            to the previous snapshot
+        """
+
+        if len( self._lsnapshots ) > 1 and self._diff_log_path :
+            current_snapshot = self._lsnapshots[-1]
+            previous_snapshot = self._lsnapshots[-2]
+            self.logger.info( 'generating diff report from snapshots [{0}] -> [{1}]'.format( current_snapshot, previous_snapshot ))
+
+            self._valid_snapshot( current_snapshot )
+            self._valid_snapshot( previous_snapshot )
+
+            if not os.path.exists( self._diff_log_path ):
+                os.makedirs( self._diff_log_path )
+
+            cmd = ['diff', '-r', '-q', '-X', self._cfgfile_diff, self._snapshots[ current_snapshot ][ 'path' ], self._snapshots[ previous_snapshot ][ 'path' ] ]
+            stdout_file = '{0}__{1}__{2}{3}'.format(os.path.join(self._diff_log_path, self._name), current_snapshot, previous_snapshot, self._difflog_ext)
+            with open(stdout_file, "w") as outfile:
+                subprocess.call( cmd, stdout=outfile )
+
+            self._snapshots[current_snapshot]['diff_log_file'] = stdout_file
+
+            self.logger.debug( 'generated diff log file [{0}]'.format( stdout_file ))
+
+
     def create_named_snapshot( self, snapshot, source_snapshot=None ):
         """ creates a named snapshot from the source directory
 
@@ -470,6 +503,7 @@ class Timeline:
         # make changes in the file system
         self._snapshot_copy_by_hardlink( self._source, snapshot_path )
         self._snapshot_find_and_copy_objects( self._source, snapshot_path )
+        self._snapshot_generate_diff_report()
 
         # delete old snapshots and handle links...
         self.rotate_snapshots()
@@ -507,6 +541,9 @@ class Timeline:
 
         # make changes in the file system
         subprocess.check_call(['rm', '-rf', deleted_snapshot['path'] ])
+        if deleted_snapshot.has_key( 'diff_log_file' ):
+            self.logger.debug( 'deleting diff log file [{0}]'.format( deleted_snapshot['diff_log_file'] ))
+            subprocess.check_call(['rm', '-f', deleted_snapshot['diff_log_file'] ])
 
         self.logger.debug( 'deleted snapshot [{0}] [{1}]'.format( snapshot, deleted_snapshot ))
 
