@@ -304,12 +304,11 @@ class Timeline:
 
         if distro == 'redhat':
             # list of directories which will be copied instead of hard-linked
-            #self._copy_dirs_recursive = ['repodata', 'repoview']
-            self._copy_dirs_recursive = ['repodata']
+            self._copy_dirs_recursive = ['repodata'] # 'repoview' left out due to size
             self._copy_files_recursive = []
         else:
-            self._copy_dirs_recursive = ['binary-*']
-            self._copy_files_recursive = ['Release', 'Release.gpg', 'Contents-*.gz']
+            self._copy_dirs_recursive = ['binary-*', 'source'] # 'i18n' left out due to size
+            self._copy_files_recursive = ['Release', 'Release.gpg', 'InRelease', 'Contents-*.gz', 'Index' ]
 
 
     def _snapshot_copy_by_hardlink( self, source_path, snapshot_path ):
