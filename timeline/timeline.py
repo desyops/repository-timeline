@@ -199,9 +199,12 @@ class Timeline:
         if self._frozen:
             raise Exception( 'timeline has already been frozen by user [{0}]'.format( self._frozen ))
 
+        if not user:
+            raise Exception( 'invalid user' )
+
         self._frozen = user
 
-        self.logger.info( 'timeline has been frozen')
+        self.logger.info( 'timeline has been frozen by user [{0}]'.format( user ))
 
 
     def unfreeze( self, user='root' ):
@@ -209,9 +212,11 @@ class Timeline:
                 opposite to the 'freeze()' method
         """
 
-        self.logger.info( 'timeline has been unfrozen by user []'.format( user ))
-
-        self._frozen = False
+        if self._frozen:
+            self.logger.info( 'timeline previously frozen by user [{0}] has been unfrozen by [{0}]'.format( self._frozen, user ))
+            self._frozen = None
+        else:
+            self.logger.warning( 'timeline is not frozen' )
 
 
     def save( self ):
