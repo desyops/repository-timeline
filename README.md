@@ -3,13 +3,38 @@
 ## Description
 The DESY Repository Management Tool allows creating nightly snapshots from RedHat/CentOS and/or Ubuntu/Debian repositories.
 
-Snapshots are taken by simply calling 'cp -al' from the source directory into the destination directory. This creates a complete copy of the source directory by hard-linking files into the destination directory. For more infos type 'man cp'.
+The goal is to allow a way of controlling how our repository mirrors are "released" to the different classes of machines managed @ DESY.
+
+The following scenario should give you an idea:
+
+Hosts managed at DESY are split into 3 different classes (Class A, Class B and Class C).
+
+- Class A hosts should get the latest updates directly from the upstream repositories.
+- Class B hosts should be a bit "safer", i.e. their repositories are kept a whole week behind the repositories of Class A hosts. In case of a repository being broken, Class A hosts will get broken before Class B hosts. This way you have time to react.
+- Class C hosts are even "safer" than Class B, i.e. they stay 2 weeks behind the upstream repositories.
+
+This translates into the following use-case:
+
+- IT Desktops from the Linux-Systems group: configured to the upstream repositories, i.e. always get the latest package updates! (Class A)
+- Remaining IT Desktops: 7 days behind the upstream repositories (Class B)
+- IT Non-Critical Servers: 7 days behind the upstream repositories (Class B)
+- IT Critical Servers: 2 weeks behind the upstream repositories (Class C)
+- External Desktops: 2 weeks behind the upstream repositories (Class C)
+- External Servers: 2 weeks behind the upstream repositories (Class C)
+
+This tool does not take care of synchronizing the repositories from their original location into a local storage (mirroring). It only takes care of managing the local mirror directories in your repository server.
+
+
+## How does this work
+The management of the repositories is done by creating a "timeline" for each repository. Each timeline contains a defined amount of snapshots from the directory tree of the given repository.
+The snapshots within the timeline are taken on a nightly basis by simply calling 'cp -al' from the source directory of the repository into the timeline directory. This creates a complete copy of the source directory by hard-linking files into the destination directory. For more infos type 'man cp'.
+When the maximum amount of snapshots is reached, the oldest snapshot gets deleted. The Class A, Class B and Class C references are simply a bunch of symbolic links which point to the appropriate snapshots.
+
+The whole timeline machinery was written in python and can also be used for other purposes than repository management. The code sections for repository management are isolated and could easily be replaced or discarded without affecting the internal working of the timeline class.
 
 
 ## Installation
-In order to use the repository management tool you just need to clone the git repository and configure the logging options by editing timeline-logging.cfg.
-
-Most examples in this text file were run with logging level=INFO unless the output might in some cases not be of relevance.
+In order to use the repository management tool you just need to clone the git repository and configure the logging options by editing timeline-logging.cfg. This file is a standard python logging configuration file. For more details check out the [Logging facility for Python](https://docs.python.org/2/library/logging.html).
 
 
 ## Usage
