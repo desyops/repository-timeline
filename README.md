@@ -56,13 +56,15 @@ Options:
 ```
 
 
-### Creating a new repository
-Let's try to create a dummy repository...
+### Creating a new repository timeline
+Let's try to create a new timeline for a dummy repository...
 ```
-./mrepo-create-repository.py -i dummyrepo /etc/skel/ /tmp/skel
+./mrepo-create-repository.py -i dummyrepo /etc/skel /tmp/skel.timeline
 ```
 
-By calling the above command you might get an error, for example:
+In this case our dummy repository is the ```/etc/skel``` folder and our destination directory for creating our timeline is ```/tmp/skel.timeline```.
+
+Most probably you will get the following error calling the previous command:
 ```
 ./mrepo-create-repository.py -i dummyrepo /etc/skel/ /tmp/skel.timeline
 2016-01-06 16:49:30 - Timeline - INFO - configuring timeline [dummyrepo] from source [/etc/skel/] into destination [/tmp/skel.timeline]
@@ -81,14 +83,14 @@ Traceback (most recent call last):
 subprocess.CalledProcessError: Command '['cp', '-al', '/etc/skel/.mkshrc', '/tmp/skel.timeline/2016.01.06-164930']' returned non-zero exit status 1
 ```
 
-This means that you cannot reference repositories from different devices. IOW, you can only create snapshots from a given repository in the same device.
+This means that we are trying to create a repository timeline in a device other than the one where the source directory of your repository is located (/tmp and /etc are mounted as different devices). In other words, you can only create snapshots from a repository within the same device. This is due to the natural constraints of using hard-links in the linux operating system (https://en.wikipedia.org/wiki/Hard_link#Limitations_of_hard_links).
 
-Let's make our example work by working only in /tmp.
+Let's make our dummy example work by creating everything within /tmp.
 ```
 rm -rf /tmp/skel.timeline
-cp -a /etc/skel /tmp
+cp -a /etc/skel /tmp/
 ./mrepo-create-repository.py -i dummyrepo /tmp/skel /tmp/skel.timeline
-2016-01-07 12:17:21 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel/] into destination [/tmp/skel.timeline]
+2016-01-07 12:17:21 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-07 12:17:21 - Timeline.dummyrepo - INFO - creating new snapshot [2016.01.07-121721]
 2016-01-07 12:17:21 - Timeline.dummyrepo - INFO - saving current timeline state...
 2016-01-07 12:17:21 - Timeline.dummyrepo - INFO - creating new link [upstream] to snapshot [2016.01.07-121721]
@@ -100,7 +102,7 @@ cp -a /etc/skel /tmp
 ...
 ```
 
-That's basically it. We now have created a new dummy repository timeline. Let's have a look:
+That's basically it. We have now created a new repository timeline. Let's have a look:
 ```
 ls -l /tmp/skel.timeline/
 total 8
@@ -118,6 +120,21 @@ lrwxrwxrwx 1 engels it   17 Jan  7 12:17 upstream -> 2016.01.07-121721
 ```
 
 Since the script was called using the option '-i', it created already an initial snapshot (2016.01.07-121721) and a few symbolic links.
+
+We can of course check if the copy was really done by hard-linking:
+```
+stat /tmp/skel/examples.desktop
+  File: ‘/tmp/skel/examples.desktop’
+  Size: 8980        Blocks: 24         IO Block: 4096   regular file
+Device: 803h/2051d  Inode: 109         Links: 2
+...
+
+stat /tmp/skel.timeline/2016.01.07-121721/examples.desktop 
+  File: ‘/tmp/skel.timeline/2016.01.07-121721/examples.desktop’
+  Size: 8980        Blocks: 24         IO Block: 4096   regular file
+Device: 803h/2051d  Inode: 109         Links: 2
+...
+```
 
 
 ### Creating new snapshots
