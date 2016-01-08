@@ -186,7 +186,7 @@ drwxr-xr-x 2 engels it 4096 Jan  7 14:01 skel.mycopy
 lrwxrwxrwx 1 engels it   17 Jan  7 13:57 upstream -> 2016.01.07-135729
 ```
 
-Note that this copy is completely independent. This means that it is not tracked in any way within the timeline metadata. This kind of snapshots must be removed using the regular linux command 'rm -rf'. Any other snapshots should be removed using the appropriate tool (mrepo-delete-snapshot.py). 
+Note that this copy is completely independent. This means that it is not tracked in any way within the timeline metadata and will therefore not be affected by any of the timeline methods including snapshot rotation.
 
 
 ### Deleting snapshots
@@ -231,12 +231,7 @@ The log files show that some symbolic links had to be relinked to a nearest neig
 
 
 #### Deleting named snapshots
-As previously stated, named snapshots are not tracked by the timeline and should therefore be removed using plain linux tools, e.g.
-```
-rm -rf /tmp/skel.timeline/skel.mycopy
-```
-
-However it's safer to remove them with the mrepo-delete-snapshot.py tool, since you might otherwise by accident remove a regular snapshot which is still referenced in the timeline metadata.
+As previously stated, named snapshots are not tracked by the timeline and can therefore be removed using regular linux tools such as 'rm'. However it's safer to remove them with the mrepo-delete-snapshot.py tool, since you might otherwise by accident remove a regular snapshot which is referenced in the timeline metadata.
 
 ```
 ./mrepo-delete-snapshot.py /tmp/skel.timeline/skel.mycopy

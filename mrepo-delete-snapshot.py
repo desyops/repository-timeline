@@ -2,7 +2,7 @@
 
 from timeline import timeline
 
-import os
+import os, subprocess
 
 usage_msg = """
 
@@ -21,9 +21,18 @@ options = vars(opts)
 if len(args) != 1:
     parser.error('incorrect number of arguments (-h for help)')
 
-split_path = os.path.split( os.path.normpath( args[0] ))
+snapshot_path = os.path.normpath( args[0] )
+split_path = os.path.split( snapshot_path )
 
 t = timeline.Timeline.load( split_path[0] )
 
-t.delete_snapshot( snapshot=split_path[1] )
-
+try:
+    t.delete_snapshot( snapshot=split_path[1] )
+except:
+    # handle named snapshots
+    if os.path.isdir( snapshot_path ):
+        subprocess.check_call(['rm', '-rf', snapshot_path ])
+        print 'deleted unreferenced snapshot [{0}]'.format( snapshot_path )
+    else:
+        print 'WARNING: TRYING TO DELETE NON-EXISTING SNAPSHOT [{0}]'.format( snapshot_path )
+        raise
