@@ -12,7 +12,7 @@ if __name__ != '__main__':
 
 def isalnum( string, allowed_extra_chars='' ):
     """ check if the given string only contains alpha-numeric characters + optionally allowed extra chars """
-    
+
     stripped_name = string.translate( None, allowed_extra_chars )
 
     return stripped_name.isalnum()
@@ -116,22 +116,22 @@ class Timeline:
         return """
 
     {0} SNAPSHOTS ({1}) {2}
-    
+
     {3}
-    
-    
+
+
     {4} LINKS ({5}) {6}
-    
+
     {7}
-    
-    
+
+
     {8} SNAPSHOTS TIMELINE {9}
-    
+
     {10}
-    
-    
+
+
     {11} TIMELINE INSTANCE DETAILS {12}
-    
+
     {13}
 
         """.format( 30*'=', len(self._snapshots), 30*'=', pprint.pformat( self._snapshots ), 32*'=', len(self._links), 32*'=', pprint.pformat( self._links ), 25*'=', 25*'=', self._lsnapshots, 22*'=', 22*'=', repr(self)  )
@@ -193,7 +193,7 @@ class Timeline:
 
                 no new snapshots are taken until 'unfreeze()' is called
 
-                this method should only be used in emergency situations! 
+                this method should only be used in emergency situations!
         """
 
         if self._frozen:
@@ -268,7 +268,7 @@ class Timeline:
 #       no absolute paths allowed. only top-level paths or relative paths, e.g.
 #       excludes = testing:dev:tmp:i386/builds
 #       in this example the path i386/builds contains a subfolder. due to technical details these "relative paths" are not
-#       skipped during the copy process. instead, they get deleted _after_ the copy process has taken place. 
+#       skipped during the copy process. instead, they get deleted _after_ the copy process has taken place.
 #    copy_files_recursive: colon-separated list of file names to be copied (i.e. not hard-linked) when creating snapshots
 #    copy_dirs_recursive:  colon-separated list of directory names to be copied (i.e. not hard-linked) when creating snapshots
 #       warning: the previous copy options perform a _recursive_ find in the source directory and _copy_ any found objects!
@@ -467,7 +467,7 @@ class Timeline:
 
     def delete_snapshot( self, snapshot ):
         """ deletes the given snapshot and handles links appropriately
-        
+
                 no action is taken if the timeline has been frozen!
         """
 
@@ -475,7 +475,7 @@ class Timeline:
 
         self._check_frozen()
         self._valid_snapshot( snapshot, fail_on_disk_check=False )
-        
+
         # handle links
         snapshot_links = self._snapshots[ snapshot ][ 'links' ][:]
         for link in snapshot_links:
@@ -499,7 +499,7 @@ class Timeline:
 
     def create_link( self, link, snapshot=None, max_offset=0, warn_before_max_offset=0 ):
         """ creates a new symbolic link to the given snapshot into the destination directory
-        
+
                 no action is taken if the timeline has been frozen!
 
                 if <max_offset> is set, links are affected when new snapshots are created, i.e. the max_offset parameter defines the
@@ -543,7 +543,7 @@ class Timeline:
 
     def delete_link( self, link ):
         """ deletes the given link
-        
+
                 no action is taken if the timeline has been frozen!
         """
 
@@ -569,7 +569,7 @@ class Timeline:
 
     def update_link( self, link, snapshot=None ):
         """ updates link to point to the given snapshot
-        
+
                 no action is taken if the timeline has been frozen!
         """
 
@@ -611,7 +611,7 @@ class Timeline:
 
     def rotate_snapshots( self ):
         """ rotate snapshots, i.e. delete old snapshots until max_snapshots are reached
-        
+
                 links are handled appropriately
         """
 
@@ -654,10 +654,10 @@ class Timeline:
 
     def _get_neighbour_snapshot( self, snapshot ):
         """ helper method to find and return the nearest (preferably the more recent) neighbour snapshot
-                
+
                 if no neighbours are found, the last snapshot itself is returned
         """
-        
+
         self._valid_snapshot( snapshot )
 
         snapshot_index = self._lsnapshots.index( snapshot )
@@ -679,7 +679,7 @@ class Timeline:
 
     def _get_snapshot_offset( self, snapshot ):
         """ helper method to return the offset of a given snapshot to the "upstream" snapshot """
-        
+
         self._valid_snapshot( snapshot )
 
         return len(self._lsnapshots) - self._lsnapshots.index( snapshot )
@@ -687,14 +687,14 @@ class Timeline:
 
     def _check_frozen( self ):
         """ helper method to abort if timeline is frozen """
-        
+
         if self._frozen:
             raise Exception('timeline is frozen!')
 
 
     def _valid_snapshot( self, snapshot, fail_on_disk_check=True ):
         """ helper method to check for a valid snapshot """
-        
+
         if not snapshot in self._snapshots:
             raise Exception('snapshot [{0}] not found!'.format( snapshot ))
 
@@ -710,7 +710,7 @@ class Timeline:
 
     def _valid_link( self, link, fail_on_disk_check=True ):
         """ helper method to check for a valid link """
-        
+
         if not link in self._links:
             raise Exception('link [{0}] not found!'.format( link ))
 
