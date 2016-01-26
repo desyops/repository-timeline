@@ -3,7 +3,9 @@
 ## Description
 The DESY Repository Management Tool allows creating nightly snapshots from RedHat/CentOS and/or Ubuntu/Debian repositories.
 
-The goal is to allow a way of controlling how our repository mirrors are "released" to the different classes of machines managed @ DESY.
+Many sites (such as DESY) typically "mirror" a whole set of linux repositories to avoid unnecessary network traffic to the original repositories located somewhere on the internet.
+
+The goal of this tool is to allow a way of controlling how the package updates within this mirrors get "released" to different classes of machines managed in a computing center.
 
 The following scenario should give you an idea:
 
@@ -25,7 +27,7 @@ This translates into the following use-case:
 This tool does not take care of synchronizing the repositories from their original location into a local storage (mirroring). It only takes care of managing the local mirror directories in your repository server.
 
 
-## How does this work
+## How does it work
 The management of the repositories is done by creating a "timeline" for each repository. Each timeline contains a defined amount of snapshots from the directory tree of the given repository.
 The snapshots within the timeline are taken on a nightly basis by simply calling 'cp -al' from the source directory of the repository into the timeline directory. This creates a complete copy of the source directory by hard-linking files into the destination directory. For more infos type 'man cp'.
 When the maximum amount of snapshots is reached, the oldest snapshot gets deleted. The Class A, Class B and Class C references are simply a bunch of symbolic links which point to the appropriate snapshots.
@@ -587,4 +589,8 @@ copy_dirs_recursive = binary-*:source
 
 This example shows that we recursively copy all 'source' directories and all directories matching the regular expressions 'binary-*'. We also recursively copy all files matching the regular expression 'Contents-*.gz' and all files that are named 'Release', 'Release.gpg', 'InRelease' or 'Index'. This are typical settings for Debian-like repositories. 
 
+#### Generating diff reports
 
+The diff_log_path setting can be used to generate "diff reports" whenever new snapshots are created. I.e. whenever a snapshot is created a new diff report will be generated in the given directory which contains the differences to the "previous snapshot".
+
+This setting is per default not set.
