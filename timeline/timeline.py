@@ -424,7 +424,7 @@ class Timeline:
             cmd = ['diff', '-r', '-q', '-X', self._cfgfile_diff, self._snapshots[ current_snapshot ][ 'path' ], self._snapshots[ previous_snapshot ][ 'path' ] ]
             stdout_file = '{0}__{1}__{2}{3}'.format(os.path.join(self._diff_log_path, self._name), current_snapshot, previous_snapshot, self._difflog_ext)
             with open(stdout_file, "w") as outfile:
-                subprocess.call( cmd, stdout=outfile )
+                subprocess.call( cmd, stdout=outfile, stderr=subprocess.STDOUT )
 
             self._snapshots[current_snapshot]['diff_log_file'] = stdout_file
 
