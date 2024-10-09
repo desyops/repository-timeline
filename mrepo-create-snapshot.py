@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 
 from timeline import timeline
 import os, sys
@@ -34,7 +34,7 @@ if options['lock']:
         lock.acquire( timeout=1 )
     except:
         if options['verbose']:
-            print 'lockfile [{0}] already locked'.format( lock_file )
+            print('lockfile [{0}] already locked'.format( lock_file ))
         sys.exit(0)
 
 try:

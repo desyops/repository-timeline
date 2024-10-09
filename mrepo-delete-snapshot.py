@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 
 from timeline import timeline
 
@@ -32,7 +32,7 @@ except:
     # handle named snapshots
     if os.path.isdir( snapshot_path ):
         subprocess.check_call(['rm', '-rf', snapshot_path ])
-        print 'deleted unreferenced snapshot [{0}]'.format( snapshot_path )
+        print('deleted unreferenced snapshot [{0}]'.format( snapshot_path ))
     else:
-        print 'WARNING: TRYING TO DELETE NON-EXISTING SNAPSHOT [{0}]'.format( snapshot_path )
+        print('WARNING: TRYING TO DELETE NON-EXISTING SNAPSHOT [{0}]'.format( snapshot_path ))
         raise

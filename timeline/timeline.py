@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 
 # Author: Jan Engels, DESY - IT
 
 import os, sys, time, random, logging, logging.config, subprocess, pickle, pprint
-import ConfigParser
+import configparser
 from datetime import datetime
 
 if __name__ != '__main__':
@@ -261,7 +261,7 @@ class Timeline:
         # FIXME cannot use this because python version is too old...
         #cfg = ConfigParser.RawConfigParser( allow_no_value = True )
 
-        cfg = ConfigParser.RawConfigParser()
+        cfg = configparser.RawConfigParser()
         cfg.add_section('MAIN')
         cfg.add_section('ADVANCED')
         cfg.set( 'MAIN', """\
@@ -307,7 +307,7 @@ class Timeline:
     def _load_cfgfile( self ):
         """ load settings from cofiguration file """
 
-        cfg = ConfigParser.SafeConfigParser()
+        cfg = configparser.SafeConfigParser()
         cfg.read( self._cfgfile )
 
         # read and set settings defined in the configuration file
@@ -541,7 +541,7 @@ class Timeline:
 
         # make changes in the file system
         subprocess.check_call(['rm', '-rf', deleted_snapshot['path'] ])
-        if deleted_snapshot.has_key( 'diff_log_file' ):
+        if 'diff_log_file' in deleted_snapshot:
             self.logger.debug( 'deleting diff log file [{0}]'.format( deleted_snapshot['diff_log_file'] ))
             subprocess.check_call(['rm', '-f', deleted_snapshot['diff_log_file'] ])
 
@@ -831,4 +831,3 @@ if __name__ == '__main__':
     t.create_snapshot()
     for i in range(t._max_snapshots):
         t.create_snapshot()
-

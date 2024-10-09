@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 
 from timeline import timeline
 
@@ -49,6 +49,6 @@ if options['consistency_check']:
     t.consistency_check()
 
 if options['verbose']:
-    print t
+    print(t)
 
 t.save()
