@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-from timeline import timeline
-
 import os
+
+from timeline import timeline
 
 usage_msg = """
 
@@ -20,6 +20,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('--source-snapshot', help='source snapshot from where to create the new snapshot', default=None)
 parser.add_option('--lock', action='store_true', help='use lockfile to protect against creating concurrent snapshots' )

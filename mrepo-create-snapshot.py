@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
+import os
+import sys
+
 from timeline import timeline
-import os, sys
 
 usage_msg = """
 
@@ -11,6 +13,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('--random-sleep', help='sleep a random amount of seconds [default=%default] before taking snapshot', type='int', default=None)
 parser.add_option('--sleep-after', help='sleep the given amount of seconds after taking the snapshot', type='int', default=None)

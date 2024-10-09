@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-from timeline import timeline
+import os
+import subprocess
 
-import os, subprocess
+from timeline import timeline
 
 usage_msg = """
 
@@ -12,6 +13,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 #parser.add_option('-v', '--verbose', '--debug', action='store_true', dest='verbose', help='run in debug mode')
 

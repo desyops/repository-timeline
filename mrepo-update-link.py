@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-from timeline import timeline
-
 import os
+
+from timeline import timeline
 
 usage_msg = """
 
@@ -15,6 +15,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('--snapshot', help='snapshot to which the link should point', default=None)
 #parser.add_option('-v', '--verbose', '--debug', action='store_true', dest='verbose', help='run in debug mode')

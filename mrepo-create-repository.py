@@ -10,6 +10,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('-i', '--initialize', action='store_true', help='initialize repository')
 #parser.add_option('-v', '--verbose', '--debug', action='store_true', dest='verbose', help='run in debug mode')

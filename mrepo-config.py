@@ -15,6 +15,7 @@ usage_msg = """
 """
 
 from optparse import OptionParser
+
 parser = OptionParser( usage=usage_msg, version="%prog 1.0" )
 parser.add_option('--max-snapshots', help='change the max. amount of snapshots', type='int')
 parser.add_option('--excludes', help='change the list of excludes', default=None)

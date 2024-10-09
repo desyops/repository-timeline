@@ -2,8 +2,16 @@
 
 # Author: Jan Engels, DESY - IT
 
-import os, sys, time, random, logging, logging.config, subprocess, pickle, pprint
 import configparser
+import logging
+import logging.config
+import os
+import pickle
+import pprint
+import random
+import subprocess
+import sys
+import time
 from datetime import datetime
 
 if __name__ != '__main__':
@@ -36,7 +44,9 @@ class Timeline:
                     destination:    the timeline destination directory (where snapshots are written into)
         """
 
-        self.logger.info( 'configuring timeline [{0}] from source [{1}] into destination [{2}]'.format( name, source, destination ))
+        self.logger.info(
+            'configuring timeline [%s] from source [%s] into destination [%s]',
+            name, source, destination)
 
         if not isalnum( name, '-_.' ):
             raise Exception( 'name string must only consist of alpha-numeric characters, dots, underscores and dashes' )
@@ -110,7 +120,7 @@ class Timeline:
 
         metadata_file = os.path.join( path, Timeline._datafile_ext )
 
-        Timeline.logger.info( 'loading timeline instance from [{0}]'.format( metadata_file ) )
+        Timeline.logger.info('loading timeline instance from [%s]', metadata_file)
         fh = open( metadata_file, 'r' )
         pickle_data = pickle.load( fh )
 
@@ -212,7 +222,7 @@ class Timeline:
 
         self._frozen = user
 
-        self.logger.info( 'timeline has been frozen by user [{0}]'.format( user ))
+        self.logger.info('timeline has been frozen by user [%s]', user)
 
 
     def unfreeze( self, user='root' ):
@@ -221,7 +231,9 @@ class Timeline:
         """
 
         if self._frozen:
-            self.logger.info( 'timeline previously frozen by user [{0}] has been unfrozen by [{0}]'.format( self._frozen, user ))
+            self.logger.info(
+                'timeline previously frozen by user [%s] has been unfrozen by [%s]',
+                self._frozen, user)
             self._frozen = None
         else:
             self.logger.warning( 'timeline is not frozen' )
@@ -243,7 +255,7 @@ class Timeline:
         d = self.__dict__.copy() # copy the dict since we will change it
         del d['logger'] # need to delete self.logger due to file object
         pickle.dump( d, fh )
-        self.logger.debug( 'current state saved into [{0}]'.format( self._datafile ))
+        self.logger.debug('current state saved into [%s]', self._datafile)
 
 
     def _load_state( self ):
@@ -252,7 +264,7 @@ class Timeline:
         self.logger.info( 'loading timeline state...')
         fh = open( self._datafile, 'r' )
         self.__dict__.update(pickle.load( fh ))
-        self.logger.info( 'timeline state loaded from [{0}]'.format( self._datafile ))
+        self.logger.info('timeline state loaded from [%s]', self._datafile)
 
 
     def _save_cfgfile( self ):
@@ -351,7 +363,7 @@ class Timeline:
             for e in self._excludes:
                 exclude_obj = os.path.normpath( os.path.join( source_path, e ))
                 if source_obj == exclude_obj:
-                    self.logger.debug( 'excluding (skipping) object [{0}]'.format( exclude_obj ))
+                    self.logger.debug('excluding (skipping) object [%s]', exclude_obj)
                     break
             else:
                 subprocess.check_call(['cp', '-al', source_obj, snapshot_path ])
@@ -361,10 +373,11 @@ class Timeline:
             if '/' in e:
                 exclude_obj = os.path.normpath( os.path.join( snapshot_path, e ))
                 if os.path.exists( exclude_obj ) or os.path.islink( exclude_obj ):
-                    self.logger.debug( 'excluding (deleting) object [{0}]'.format( exclude_obj ))
+                    self.logger.debug('excluding (deleting) object [%s]', exclude_obj)
                     subprocess.check_call(['rm', '-rf', exclude_obj ])
                 else:
-                    self.logger.warning( 'trying to exclude (delete) unexisting object [{0}]'.format( exclude_obj ))
+                    self.logger.warning(
+                        'trying to exclude (delete) unexisting object [%s]', exclude_obj)
 
 
     def _snapshot_find_and_copy_objects( self, source_path, snapshot_path ):
@@ -385,7 +398,8 @@ class Timeline:
             for cdir in cdirs:
                 subprocess.check_call(['rm', '-rf', cdir ])
                 rel_path = os.path.relpath( cdir, snapshot_path)
-                self.logger.debug( 'copying directory [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cdir ))
+                self.logger.debug(
+                    'copying directory [%s] to [%s]', os.path.join(source_path, rel_path), cdir)
                 subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cdir ])
 
         if self._copy_files_recursive:
@@ -401,7 +415,7 @@ class Timeline:
             for cfile in cfiles:
                 subprocess.check_call(['rm', '-f', cfile ])
                 rel_path = os.path.relpath( cfile, snapshot_path)
-                self.logger.debug( 'copying file [{0}] to [{1}]'.format( os.path.join(source_path, rel_path), cfile ))
+                self.logger.debug('copying file [%s] to [%s]', os.path.join(source_path, rel_path), cfile)
                 subprocess.check_call(['cp', '-a', os.path.join(source_path, rel_path), cfile ])
 
 
@@ -413,7 +427,9 @@ class Timeline:
         if len( self._lsnapshots ) > 1 and self._diff_log_path :
             current_snapshot = self._lsnapshots[-1]
             previous_snapshot = self._lsnapshots[-2]
-            self.logger.info( 'generating diff report from snapshots [{0}] -> [{1}]'.format( current_snapshot, previous_snapshot ))
+            self.logger.info(
+                'generating diff report from snapshots [%s] -> [%s]',
+                current_snapshot, previous_snapshot)
 
             self._valid_snapshot( current_snapshot )
             self._valid_snapshot( previous_snapshot )
@@ -428,7 +444,7 @@ class Timeline:
 
             self._snapshots[current_snapshot]['diff_log_file'] = stdout_file
 
-            self.logger.debug( 'generated diff log file [{0}]'.format( stdout_file ))
+            self.logger.debug('generated diff log file [%s]', stdout_file)
 
 
     def create_named_snapshot( self, snapshot, source_snapshot=None ):
@@ -442,10 +458,10 @@ class Timeline:
             these snapshots can be created even if the timeline has been frozen.
         """
 
-        self.logger.info( 'creating new snapshot [{0}]'.format( snapshot ))
+        self.logger.info('creating new snapshot [%s]', snapshot)
 
         if source_snapshot:
-            self.logger.info( 'using source snapshot [{0}]'.format( source_snapshot ))
+            self.logger.info('using source snapshot [%s]', source_snapshot)
             self._valid_snapshot( source_snapshot )
             source_path = self._snapshots[source_snapshot]['path']
         else:
@@ -463,7 +479,7 @@ class Timeline:
         self._snapshot_copy_by_hardlink( source_path, snapshot_path )
         self._snapshot_find_and_copy_objects( source_path, snapshot_path )
 
-        self.logger.debug( 'created new snapshot [{0}]'.format( snapshot ))
+        self.logger.debug('created new snapshot [%s]', snapshot)
 
 
     def create_snapshot( self, random_sleep_before_snapshot=None, sleep_after_snapshot=None ):
@@ -476,7 +492,7 @@ class Timeline:
 
         if random_sleep_before_snapshot:
             sleep_time = random.randint( 1, random_sleep_before_snapshot )
-            self.logger.info( 'sleeping [{0}] seconds before taking a new snapshot'.format( sleep_time ))
+            self.logger.info('sleeping [%s] seconds before taking a new snapshot', sleep_time)
             time.sleep( sleep_time )
 
         now = datetime.now()
@@ -487,7 +503,7 @@ class Timeline:
         if getattr( self, '_debug', None ):
             snapshot = now.strftime("%Y.%m.%d-%H%M%S.%f")
 
-        self.logger.info( 'creating new snapshot [{0}]'.format( snapshot ))
+        self.logger.info('creating new snapshot [%s]', snapshot)
 
         self._check_frozen()
 
@@ -508,10 +524,10 @@ class Timeline:
         # delete old snapshots and handle links...
         self.rotate_snapshots()
 
-        self.logger.debug( 'created new snapshot [{0}]'.format( snapshot ))
+        self.logger.debug('created new snapshot [%s]', snapshot)
 
         if sleep_after_snapshot:
-            self.logger.info( 'sleeping for [{0}] seconds'.format( sleep_after_snapshot ))
+            self.logger.info('sleeping for [%s] seconds', sleep_after_snapshot)
             time.sleep( sleep_after_snapshot )
 
 
@@ -521,7 +537,7 @@ class Timeline:
                 no action is taken if the timeline has been frozen!
         """
 
-        self.logger.info( 'deleting snapshot [{0}]'.format( snapshot ))
+        self.logger.info( 'deleting snapshot [%s]', snapshot)
 
         self._check_frozen()
         self._valid_snapshot( snapshot, fail_on_disk_check=False )
@@ -542,7 +558,7 @@ class Timeline:
         # make changes in the file system
         subprocess.check_call(['rm', '-rf', deleted_snapshot['path'] ])
         if 'diff_log_file' in deleted_snapshot:
-            self.logger.debug( 'deleting diff log file [{0}]'.format( deleted_snapshot['diff_log_file'] ))
+            self.logger.debug('deleting diff log file [%s]', deleted_snapshot['diff_log_file'])
             subprocess.check_call(['rm', '-f', deleted_snapshot['diff_log_file'] ])
 
         self.logger.debug( 'deleted snapshot [{0}] [{1}]'.format( snapshot, deleted_snapshot ))
@@ -565,7 +581,7 @@ class Timeline:
         if snapshot is None:
             snapshot = self._get_latest_snapshot()
 
-        self.logger.info( 'creating new link [{0}] to snapshot [{1}]'.format( link, snapshot ))
+        self.logger.info('creating new link [%s] to snapshot [%s]', link, snapshot)
 
         if not isalnum( link, '-_.' ):
             raise Exception( 'link name must only consist of alpha-numeric characters, dots, underscores and dashes' )
@@ -581,7 +597,9 @@ class Timeline:
                 raise Exception( 'max_offset must be > 0' )
 
             if self._get_snapshot_offset( snapshot ) > max_offset:
-                self.logger.warning( 'creating link to snapshot with offset [{0}] which already lies beyond max_offset [{1}]!'.format( self._get_snapshot_offset( snapshot ), max_offset ))
+                self.logger.warning(
+                    'creating link to snapshot with offset [%s] which already lies beyond max_offset [%s]!',
+                    self._get_snapshot_offset( snapshot ), max_offset)
 
         link_path = os.path.join( self._destination, link )
         self._links[ link ] = { 'created' : datetime.now(), 'snapshot' : snapshot, 'path' : link_path, 'max_offset' : max_offset, 'warn_before_max_offset' : warn_before_max_offset }
@@ -591,7 +609,7 @@ class Timeline:
         # make changes in the file system
         subprocess.check_call(['ln', '-s', snapshot, link_path ])
 
-        self.logger.debug( 'created new link [{0}] to snapshot [{1}]'.format( link, snapshot ))
+        self.logger.debug('created new link [%s] to snapshot [%s]', link, snapshot)
 
 
     def delete_link( self, link ):
@@ -600,7 +618,7 @@ class Timeline:
                 no action is taken if the timeline has been frozen!
         """
 
-        self.logger.info( 'deleting link [{0}]'.format( link ))
+        self.logger.info('deleting link [%s]', link)
 
         self._check_frozen()
         self._valid_link( link, fail_on_disk_check=False )
@@ -615,7 +633,7 @@ class Timeline:
         # make changes in the file system
         subprocess.check_call(['rm', '-f', deleted_link['path'] ])
 
-        self.logger.debug( 'deleted link [{0}] [{1}]'.format( link, deleted_link ))
+        self.logger.debug('deleted link [%s] [%s]', link, deleted_link)
 
         return deleted_link
 
@@ -631,18 +649,20 @@ class Timeline:
         if snapshot is None:
             snapshot = self._get_latest_snapshot()
 
-        self.logger.info( 'updating link [{0}] to snapshot [{1}]'.format( link, snapshot ))
+        self.logger.info('updating link [%s] to snapshot [%s]', link, snapshot)
 
         self._check_frozen()
         self._valid_link( link )
         self._valid_snapshot( snapshot )
 
         if snapshot == self._links[ link ][ 'snapshot' ]:
-            self.logger.warning('link [{0}] already points to snapshot [{1}]!'.format( link, snapshot ))
+            self.logger.warning('link [%s] already points to snapshot [%s]!', link, snapshot)
 
         if self._links[ link ][ 'max_offset' ]:
             if self._get_snapshot_offset( snapshot ) > self._links[ link ][ 'max_offset' ]:
-                self.logger.warning( 'updating link to snapshot with offset [{0}] which lies beyond specified max_offset [{1}]!'.format( self._get_snapshot_offset( snapshot ), self._links[ link ][ 'max_offset' ] ))
+                self.logger.warning(
+                    'updating link to snapshot with offset [%s] which lies beyond specified max_offset [%s]!',
+                    self._get_snapshot_offset( snapshot ), self._links[ link ][ 'max_offset' ])
 
         # remove link from old snapshot
         old_snapshot = self._links[ link ][ 'snapshot' ]
@@ -659,7 +679,7 @@ class Timeline:
         # make changes in the file system
         subprocess.check_call(['ln', '-snf', snapshot, self._links[ link ][ 'path' ] ])
 
-        self.logger.info( 'updated link [{0}] to snapshot [{1}]'.format( link, snapshot ))
+        self.logger.info('updated link [%s] to snapshot [%s]', link, snapshot)
 
 
     def rotate_snapshots( self ):
@@ -686,13 +706,14 @@ class Timeline:
         self.logger.info( 'checking links...' )
         for link in self._links.keys():
             if not self._valid_link( link, fail_on_disk_check=False ):
-                self.logger.warning( 'deleting invalid link [{0}]'.format( self._links[link]['path'] ))
+                self.logger.warning('deleting invalid link [%s]', self._links[link]['path'])
                 self.delete_link( link )
 
         self.logger.info( 'checking snapshots...' )
         for snapshot in self._lsnapshots:
             if not self._valid_snapshot( snapshot, fail_on_disk_check=False ):
-                self.logger.warning( 'deleting invalid snapshot [{0}]'.format( self._snapshots[snapshot]['path'] ))
+                self.logger.warning(
+                    'deleting invalid snapshot [%s]', self._snapshots[snapshot]['path'])
                 self.delete_snapshot( snapshot )
 
 
