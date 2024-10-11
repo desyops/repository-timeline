@@ -1,7 +1,7 @@
 # DESY Repository Management Tool
 
 ## Description
-The DESY Repository Management Tool allows creating nightly snapshots from RedHat/CentOS and/or Ubuntu/Debian repositories.
+The DESY Repository Management Tool allows creating nightly snapshots from RedHat/AlmaLinux and/or Ubuntu/Debian repositories.
 
 Many sites (such as DESY) typically "mirror" a whole set of linux repositories to avoid unnecessary network traffic to the original repositories located somewhere on the internet.
 
@@ -36,45 +36,73 @@ The whole timeline machinery was written in python and can also be used for othe
 
 
 ## Installation
-In order to use the repository management tool you just need to clone the git repository and configure the logging options by editing timeline-logging.cfg. This file is a standard python logging configuration file. For more details check out the [Logging facility for Python](https://docs.python.org/2/library/logging.html).
+In order to use the repository management tool you just need to clone the git repository and configure the logging options by editing timeline-logging.cfg. This file is a standard python logging configuration file. For more details check out the [Logging facility for Python](https://docs.python.org/3/library/logging.html).
 
 
 ## Usage
-Every script can be called without arguments (or with option -h) to show a little help dialog.
+The main script is `mrepo.py`, every subcommand can be called with `--help` to show a help dialog:
 ```
-$ ./mrepo-create-repository.py -h
+$ ./mrepo.py -h
+usage: mrepo.py [-h] {config,create-default-links,create-link,create-named-snapshot,create-repo,create-snapshot,delete-link,delete-snapshot,rename-link,update-link} ...
 
-Usage:
+positional arguments:
+  {config,create-default-links,create-link,create-named-snapshot,create-repo,create-snapshot,delete-link,delete-snapshot,rename-link,update-link}
+                        Available subcommands
+    config              Display timeline information or change advanced settings
+    create-default-links
+                        Create default links
+    create-link         Create a new link
+    create-named-snapshot
+                        Create a new snapshot which is not kept, stored or managed within the timeline metadata
+    create-repo         Create new repository timeline
+    create-snapshot     Create new snapshot in a repository
+    delete-snapshot     Delete snapshot from a repository
+    rename-link         Rename link in a repository
+    update-link         Update link with new snapshot target
 
-mrepo-create-repository.py [options] NAME SOURCE DESTINATION
+options:
+  -h, --help            show this help message and exit
 
-    example: mrepo-create-repository.py -i ubuntu /srv/repo/linux/ubuntu /srv/repo/linux/ubuntu.timeline
+$ ./mrepo.py config --help
+usage: mrepo.py config [-h] [--max-snapshots MAX_SNAPSHOTS] [--excludes EXCLUDES] [--freeze] [--unfreeze] [--consistency-check] repository
 
+positional arguments:
+  repository            Reposity Location
 
-Options:
-  --version         show program's version number and exit
-  -h, --help        show this help message and exit
-  -i, --initialize  initialize repository
+options:
+  -h, --help            show this help message and exit
+  --max-snapshots MAX_SNAPSHOTS
+                        change the max. amount of snapshots
+  --excludes EXCLUDES   change the list of excludes
+  --freeze              freeze the timeline
+  --unfreeze            unfreeze the timeline
+  --consistency-check   check repository for consistency
+
+examples:
+    mrepo.py config /srv/repo/linux/ubuntu.timeline --freeze
+    mrepo.py config /srv/repo/linux/ubuntu.timeline --unfreeze
+    mrepo.py config /srv/repo/linux/ubuntu.timeline --consistency-check
+    mrepo.py config /srv/repo/linux/ubuntu.timeline --max-snapshots=42
 ```
 
 
 ### Creating a new repository timeline
 Let's try to create a new timeline for a dummy repository...
 ```
-./mrepo-create-repository.py -i dummyrepo /etc/skel /tmp/skel.timeline
+./mrepo.py create-repo -i dummyrepo /etc/skel /tmp/skel.timeline
 ```
 
 In this case our dummy repository is the ```/etc/skel``` folder and our destination directory for creating our timeline is ```/tmp/skel.timeline```.
 
 Most probably you will get the following error calling the previous command:
 ```
-./mrepo-create-repository.py -i dummyrepo /etc/skel/ /tmp/skel.timeline
+./mrepo.py create-repos -i dummyrepo /etc/skel/ /tmp/skel.timeline
 2016-01-06 16:49:30 - Timeline - INFO - configuring timeline [dummyrepo] from source [/etc/skel/] into destination [/tmp/skel.timeline]
 2016-01-06 16:49:30 - Timeline.dummyrepo - INFO - creating new snapshot [2016.01.06-164930]
 2016-01-06 16:49:30 - Timeline.dummyrepo - INFO - saving current timeline state...
 cp: cannot create hard link ‘/tmp/skel.timeline/2016.01.06-164930/.mkshrc’ to ‘/etc/skel/.mkshrc’: Invalid cross-device link
 Traceback (most recent call last):
-  File "./mrepo-create-repository.py", line 26, in <module>
+  File "./mrepo.py", line 26, in <module>
     t.create_snapshot()
   File "/afs/desy.de/user/e/engels/work/systems/desyops-git-repos/mrepo/timeline/timeline.py", line 450, in create_snapshot
     self._snapshot_copy_by_hardlink( self._source, snapshot_path )
@@ -91,7 +119,7 @@ Let's make our dummy example work by creating everything within /tmp.
 ```
 rm -rf /tmp/skel.timeline
 cp -a /etc/skel /tmp/
-./mrepo-create-repository.py -i dummyrepo /tmp/skel /tmp/skel.timeline
+./mrepo.py create-repository -i dummyrepo /tmp/skel /tmp/skel.timeline
 2016-01-07 12:17:21 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-07 12:17:21 - Timeline.dummyrepo - INFO - creating new snapshot [2016.01.07-121721]
 2016-01-07 12:17:21 - Timeline.dummyrepo - INFO - saving current timeline state...
@@ -142,7 +170,7 @@ Device: 803h/2051d  Inode: 109         Links: 2
 ### Creating new snapshots
 Example how to create a new snapshot for the newly created repository:
 ```
-./mrepo-create-snapshot.py /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
 2016-01-07 13:54:56 - Timeline - INFO - loading timeline instance from [/tmp/skel.timeline/.timeline]
 2016-01-07 13:54:56 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-07 13:54:56 - Timeline.dummyrepo - INFO - loading timeline state...
@@ -176,8 +204,8 @@ We also see that the 'upstream' link has been updated to the newly created snaps
 
 If we create 2 new snapshots:
 ```
-./mrepo-create-snapshot.py /tmp/skel.timeline
-./mrepo-create-snapshot.py /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
 ```
 
 We can see that the offset003 link will stay pinned to the 3rd snapshot (2016.01.07-135456):
@@ -204,7 +232,7 @@ lrwxrwxrwx 1 engels it   17 Jan  7 13:57 upstream -> 2016.01.07-135729
 #### Creating named snapshots
 Besides creating "regular" snapshots one can create a new "named" snapshot which will be a completely independent copy of the repository:
 ```
-./mrepo-create-named-snapshot.py /tmp/skel.timeline/skel.mycopy
+./mrepo.py create-named-snapshot /tmp/skel.timeline/skel.mycopy
 2016-01-07 14:01:25 - Timeline - INFO - loading timeline instance from [/tmp/skel.timeline/.timeline]
 2016-01-07 14:01:25 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-07 14:01:25 - Timeline.dummyrepo - INFO - loading timeline state...
@@ -236,8 +264,8 @@ Note that this copy is completely independent. This means that it is not tracked
 ### Deleting snapshots
 Let's remove 2 snapshots:
 ```
-./mrepo-delete-snapshot.py /tmp/skel.timeline/2016.01.07-135727
-./mrepo-delete-snapshot.py /tmp/skel.timeline/2016.01.07-121721
+./mrepo.py delete-snapshot /tmp/skel.timeline/2016.01.07-135727
+./mrepo.py delete-snapshot /tmp/skel.timeline/2016.01.07-121721
 
 ls -l /tmp/skel.timeline
 total 16
@@ -275,16 +303,16 @@ The log files show that some symbolic links had to be relinked to a nearest neig
 
 
 #### Deleting named snapshots
-As previously stated, named snapshots are not tracked by the timeline and can therefore be removed using regular linux tools such as 'rm'. However it's safer to remove them with the mrepo-delete-snapshot.py tool, since you might otherwise by accident remove a regular snapshot which is referenced in the timeline metadata.
+As previously stated, named snapshots are not tracked by the timeline and can therefore be removed using regular linux tools such as 'rm'. However it's safer to remove them with the mrepo.py delete-snapshot tool, since you might otherwise by accident remove a regular snapshot which is referenced in the timeline metadata.
 
 ```
-./mrepo-delete-snapshot.py /tmp/skel.timeline/skel.mycopy
+./mrepo.py delete-snapshot /tmp/skel.timeline/skel.mycopy
 ```
 
 ### Creating links
 Example on how to create a new link:
 ```
-./mrepo-create-link.py /tmp/skel.timeline/myskel.link
+./mrepo.py create-link /tmp/skel.timeline/myskel.link
 
 ls -l /tmp/skel.timeline
 total 15
@@ -309,7 +337,7 @@ Per default, new links point to the newest (upstream) snapshot and do not have a
 #### Creating links with a max-offset value
 To ensure that links are kept at a maximum offset, we need to use the option --max-offset, e.g.
 ```
-./mrepo-create-link.py --max-offset=2 /tmp/skel.timeline/mylink.offset2
+./mrepo.py create-link --max-offset=2 /tmp/skel.timeline/mylink.offset2
 
 ls -l /tmp/skel.timeline
 total 12
@@ -331,8 +359,8 @@ lrwxrwxrwx 1 engels it   17 Jan  7 13:57 upstream -> 2016.01.07-135729
 
 Let's check:
 ```
-./mrepo-create-snapshot.py /tmp/skel.timeline
-./mrepo-create-snapshot.py /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
 
 ls -l /tmp/skel.timeline
 total 20
@@ -360,9 +388,9 @@ Note that specifying max-offset=2 doesn't mean that the link will be set initial
 
 
 ### Deleting links
-Deleting links is done using mrepo-delete-link.py. E.g.
+Deleting links is done using mrepo.py delete-link. E.g.
 ```
-./mrepo-delete-link.py /tmp/skel.timeline/myskel.link
+./mrepo.py delete-link /tmp/skel.timeline/myskel.link
 
 ls -l /tmp/skel.timeline
 total 20
@@ -385,9 +413,9 @@ lrwxrwxrwx 1 engels it   17 Jan  8 08:48 upstream -> 2016.01.08-084855
 
 
 ### Renaming links
-Since links are tracked by the timeline instance, they must be renamed using the appropriate tool (mrepo-rename-link.py), e.g.:
+Since links are tracked by the timeline instance, they must be renamed using the appropriate tool (mrepo.py rename-link), e.g.:
 ```
-./mrepo-rename-link.py /tmp/skel.timeline/mylink.offset2 /tmp/skel.timeline/mylink.offset002
+./mrepo.py rename-link /tmp/skel.timeline/mylink.offset2 /tmp/skel.timeline/mylink.offset002
 
 ls -l /tmp/skel.timeline
 total 20
@@ -410,9 +438,9 @@ lrwxrwxrwx 1 engels it   17 Jan  8 08:48 upstream -> 2016.01.08-084855
 
 
 ### Updating links
-Updating links to point to a different snapshot must also be done using the appropriate tool (mrepo-update-link.py), e.g.:
+Updating links to point to a different snapshot must also be done using the appropriate tool (mrepo.py update-link), e.g.:
 ```
-./mrepo-update-link.py /tmp/skel.timeline/mylink.offset002
+./mrepo.py update-link /tmp/skel.timeline/mylink.offset002
 
 ls -l /tmp/skel.timeline
 total 20
@@ -437,8 +465,8 @@ Per default links are updated to the upstream snapshot unless the option --snaps
 
 Updating links doesn't affect the max-offset value. This means that when the max-offset value is reached the link is kept pinned to the max-offset snapshot. Let's check:
 ```
-./mrepo-create-snapshot.py /tmp/skel.timeline
-./mrepo-create-snapshot.py /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
 
 ls -l /tmp/skel.timeline
 total 28
@@ -465,19 +493,19 @@ Looks good :) ```mylink.offset002``` keeps pointing at the second snapshot.
 
 
 ### Advanced settings
-For changing advanced settings or displaying timeline informations one needs to use the mrepo-config.py tool.
+For changing advanced settings or displaying timeline informations one needs to use the mrepo.py config tool.
 
 
 #### Display timeline summary
 ```
-./mrepo-config.py -v /tmp/skel.timeline
+./mrepo.py config -v /tmp/skel.timeline
 ```
 
 
 #### Freezing the repository
 Freezing the repository prevents most operations including creating new snapshots. This should only be used in emergency situations where the upstream repository is broken and you do not want to propagate the error to your production repositories. Let's check:
 ```
-./mrepo-config.py --freeze /tmp/skel.timeline
+./mrepo.py config --freeze /tmp/skel.timeline
 2016-01-08 09:06:41 - Timeline - INFO - loading timeline instance from [/tmp/skel.timeline/.timeline]
 2016-01-08 09:06:41 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-08 09:06:41 - Timeline.dummyrepo - INFO - loading timeline state...
@@ -485,14 +513,14 @@ Freezing the repository prevents most operations including creating new snapshot
 2016-01-08 09:06:41 - Timeline.dummyrepo - INFO - timeline has been frozen by user [root]
 2016-01-08 09:06:41 - Timeline.dummyrepo - INFO - saving current timeline state...
 
-./mrepo-create-snapshot.py /tmp/skel.timeline
+./mrepo.py create-snapshot /tmp/skel.timeline
 2016-01-08 09:07:08 - Timeline - INFO - loading timeline instance from [/tmp/skel.timeline/.timeline]
 2016-01-08 09:07:08 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-08 09:07:08 - Timeline.dummyrepo - INFO - loading timeline state...
 2016-01-08 09:07:08 - Timeline.dummyrepo - INFO - timeline state loaded from [/tmp/skel.timeline/.timeline]
 2016-01-08 09:07:08 - Timeline.dummyrepo - INFO - creating new snapshot [2016.01.08-090708]
 Traceback (most recent call last):
-  File "./mrepo-create-snapshot.py", line 42, in <module>
+  File "./mrepo.py", line 42, in <module>
     t.create_snapshot( random_sleep_before_snapshot=options['random_sleep'], sleep_after_snapshot=options['sleep_after'])
   File "/afs/desy.de/user/e/engels/work/systems/desyops-git-repos/mrepo/timeline/timeline.py", line 438, in create_snapshot
     self._check_frozen()
@@ -503,7 +531,7 @@ Exception: timeline is frozen!
 
 Let's unfreeze it:
 ```
-./mrepo-config.py --unfreeze /tmp/skel.timeline
+./mrepo.py config --unfreeze /tmp/skel.timeline
 2016-01-08 09:08:28 - Timeline - INFO - loading timeline instance from [/tmp/skel.timeline/.timeline]
 2016-01-08 09:08:28 - Timeline - INFO - configuring timeline [dummyrepo] from source [/tmp/skel] into destination [/tmp/skel.timeline]
 2016-01-08 09:08:28 - Timeline.dummyrepo - INFO - loading timeline state...
@@ -516,7 +544,7 @@ Let's unfreeze it:
 #### Changing the maximum amount of snapshots
 The maximum amount of snapshots can easily be changed as follows:
 ```
-./mrepo-config.py --max-snapshots=10 /tmp/skel.timeline
+./mrepo.py config --max-snapshots=10 /tmp/skel.timeline
 ```
 
 The maximum amount of snapshots can also be changed in the timeline configuration file (see below).
