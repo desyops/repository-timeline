@@ -15,8 +15,10 @@ import time
 from datetime import datetime
 
 if __name__ != '__main__':
-    cwd=os.path.dirname(sys.argv[0])
-    logging.config.fileConfig( os.path.join( cwd, 'timeline-logging.cfg' ))
+    try:
+        logging.config.fileConfig('/etc/timeline-logging.cfg')
+    except FileNotFoundError as e:
+        logging.config.fileConfig(f'{os.path.dirname(__file__)}/timeline-logging.cfg')
 
 def isalnum( string, allowed_extra_chars='' ):
     """ check if the given string only contains alpha-numeric characters + optionally allowed extra chars """
