@@ -17,7 +17,7 @@ from datetime import datetime
 if __name__ != '__main__':
     try:
         logging.config.fileConfig('/etc/timeline-logging.cfg')
-    except FileNotFoundError as e:
+    except:
         logging.config.fileConfig(f'{os.path.dirname(__file__)}/timeline-logging.cfg')
 
 def isalnum( string, allowed_extra_chars='' ):
