@@ -126,7 +126,10 @@ class Timeline:
 
         Timeline.logger.info('loading timeline instance from [%s]', metadata_file)
         fh = open( metadata_file, 'rb' )
-        pickle_data = pickle.load( fh )
+        try:
+            pickle_data = pickle.load( fh )
+        except UnicodeDecodeError:
+            pickle_data = pickle.load(fh, encoding='latin1')
 
         # this calls __init__ with the given arguments loaded from the metadata file
         return cls( pickle_data['_name'], pickle_data['_source'], pickle_data['_destination'] )
@@ -267,7 +270,10 @@ class Timeline:
 
         self.logger.info( 'loading timeline state...')
         fh = open( self._datafile, 'rb' )
-        self.__dict__.update(pickle.load( fh ))
+        try:
+            self.__dict__.update(pickle.load( fh ))
+        except UnicodeDecodeError:
+            self.__dict__.update(pickle.load( fh, encoding='latin1' ))
         self.logger.info('timeline state loaded from [%s]', self._datafile)
 
 
